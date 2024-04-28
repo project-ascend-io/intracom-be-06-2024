@@ -16,6 +16,15 @@ export function createApiResponse(schema: z.ZodTypeAny, description: string, sta
   };
 }
 
+export function createPostBodyParams(zodSchema: z.ZodTypeAny) {
+  return {
+    content: {
+      'application/json': {
+        schema: zodSchema,
+      },
+    },
+  };
+}
 // Use if you want multiple responses for a single endpoint
 
 // import { ResponseConfig } from '@asteasolutions/zod-to-openapi';

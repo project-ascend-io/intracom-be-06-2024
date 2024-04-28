@@ -15,6 +15,10 @@ export const UserSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
 });
+export const NewUserSchema = z.object({
+  name: z.string().openapi({ example: 'John' }),
+  email: z.string().openapi({ example: 'johndoe@example.com' }),
+});
 
 // Input Validation for 'GET users/:id' endpoint
 export const GetUserSchema = z.object({

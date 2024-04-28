@@ -35,7 +35,7 @@ export const userRepository = {
     return users.find((user) => user.id === id) || null;
   },
 
-  insertUser: async (user): Promise<User> => {
+  insertUser: async (user: User): Promise<User> => {
     try {
       const newUser = new UserModel(user);
       const savedUser = await newUser.save();
