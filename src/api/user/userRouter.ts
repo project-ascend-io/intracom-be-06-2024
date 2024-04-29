@@ -46,14 +46,20 @@ export const userRouter: Router = (() => {
     tags: ['User'],
     responses: createApiResponse(UserSchema, 'Success'),
     request: {
+      params: NewUserSchema,
       body: createPostBodyParams(NewUserSchema),
     },
   });
 
-  router.post('/', validateRequest(NewUserSchema), async (_req: Request, res: Response) => {
-    const serviceResponse = await userService.insertUser(_req);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.post(
+    '/',
+    //validateRequest(NewUserSchema),
+    async (_req: Request, res: Response) => {
+      console.log('Async call');
+      const serviceResponse = await userService.insertUser(_req);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
   return router;
 })();

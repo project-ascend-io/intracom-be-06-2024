@@ -1,6 +1,6 @@
 import { User, UserModel } from '@/api/user/userModel';
 
-import { mongoDatabase, MongoDbCollection } from '../mongoDatabase';
+import { mongoDatabase } from '../mongoDatabase';
 
 export const users: User[] = [
   {
@@ -23,7 +23,7 @@ export const users: User[] = [
 
 export const userRepository = {
   startConnection: async () => {
-    const mongoDb = await mongoDatabase.initConnection(MongoDbCollection.USERS);
+    const mongoDb = await mongoDatabase.initConnection();
     return mongoDb;
   },
 
@@ -37,6 +37,7 @@ export const userRepository = {
 
   insertUser: async (user: User): Promise<User> => {
     try {
+      await userRepository.startConnection();
       const newUser = new UserModel(user);
       const savedUser = await newUser.save();
       return savedUser;

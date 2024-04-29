@@ -9,10 +9,12 @@ export const handleServiceResponse = (serviceResponse: ServiceResponse<any>, res
 };
 
 export const validateRequest = (schema: ZodSchema) => (req: Request, res: Response, next: NextFunction) => {
+  console.log(req.body);
   try {
     schema.parse({ body: req.body, query: req.query, params: req.params });
     next();
   } catch (err) {
+    console.log('Error', err);
     const errorMessage = concatZodErrorMessages(err as ZodError);
     const statusCode = StatusCodes.BAD_REQUEST;
     res.status(statusCode).send(new ServiceResponse<null>(ResponseStatus.Failed, errorMessage, null, statusCode));

@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
-import { User } from '@/api/user/userModel';
+import { NewUserSchema, User } from '@/api/user/userModel';
 import { userRepository } from '@/api/user/userRepository';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { logger } from '@/server';
@@ -39,19 +39,16 @@ export const userService = {
 
   insertUser: async (request: Request): Promise<ServiceResponse<User | null>> => {
     try {
-      // const params = GetUserSchema.parse({ params: user });
-      console.log(request);
+      console.log('Body: ', request.body);
+      console.log('Params: ', request.params);
+      const user = NewUserSchema.parse({ ...request.body });
+      console.log('New User Schema', user);
 
-      // const newUser = await userRepository.insertUser();
-      return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
-      // return new ServiceResponse<User>(
-      //   ResponseStatus.Success,
-      //   "User created.",
-      //   newUser,
-      //   StatusCodes.OK,
-      // );
+      const newUser = await userRepository.insertUser(user);
+
+      return new ServiceResponse<User>(ResponseStatus.Success, 'User created.', newUser, StatusCodes.OK);
     } catch (err) {
-      const errorMessage = `Error Message: ${err}`;
+      const errorMessage = `userService - InsertUser - Error Message`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }

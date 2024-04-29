@@ -18,6 +18,7 @@ export const UserSchema = z.object({
 export const NewUserSchema = z.object({
   name: z.string().openapi({ example: 'John' }),
   email: z.string().openapi({ example: 'johndoe@example.com' }),
+  age: z.number().openapi({ example: 19 }),
 });
 
 // Input Validation for 'GET users/:id' endpoint

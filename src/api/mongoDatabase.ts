@@ -7,9 +7,9 @@ export enum MongoDbCollection {
 }
 
 export const mongoDatabase = {
-  initConnection: async (collection: MongoDbCollection): Promise<Mongoose> => {
+  initConnection: async (): Promise<Mongoose> => {
     const { MONGODB_CONNECTION_STRING } = env;
     console.log('Mongo DB Connection String: ', MONGODB_CONNECTION_STRING);
-    return await mongoose.connect(MONGODB_CONNECTION_STRING + `/${collection}`);
+    return await mongoose.connect(MONGODB_CONNECTION_STRING);
   },
 };
