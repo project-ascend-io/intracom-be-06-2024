@@ -97,8 +97,105 @@ Developed to streamline backend development, this boilerplate is your solution f
 
 ```
 
-## 🤝 Feedback and Contributions
+### Installing `intracom-be-06-2024`
 
-We'd love to hear your feedback and suggestions for further improvements. Feel free to contribute and join us in making backend development cleaner and faster!
+**Objective**: This SOP outlines the steps to install and set up the `intracom-be-06-2024` application.
 
-🎉 Happy coding!
+---
+
+#### Prerequisites:
+
+- SSH access
+- Git installed
+- Node.js and npm installed
+- Docker Desktop installed
+- MongoDB community server image available on Docker Hub
+
+---
+
+### Steps:
+
+1. **Setup SSH Key:**
+
+   - Generate an SSH key if you don't have one: `ssh-keygen -t rsa -b 4096 -C "your_email@example.com"`
+   - Add the SSH key to your SSH agent: `eval "$(ssh-agent -s)"` and `ssh-add ~/.ssh/id_rsa`
+   - Add the SSH key to your GitHub account.
+
+2. **Clone the Repository:**
+
+   - Clone the `intracom-be-06-2024` repository:
+     ```sh
+     git clone https://github.com/project-ascend-io/intracom-be-06-2024
+     cd intracom-be-06-2024
+     ```
+
+3. **Install Dependencies:**
+
+   - Navigate to the project directory and run:
+     ```sh
+     npm install
+     ```
+
+4. **Setup Environment Variables:**
+
+   - Create a `.env` file in the root directory of your project with the following content:
+
+     ```
+     NODE_ENV=development
+     PORT=8080
+     HOST=localhost
+
+     # CORS Settings
+     CORS_ORIGIN=http://localhost:*
+
+     # Rate Limiting
+     COMMON_RATE_LIMIT_WINDOW_MS=1000
+     COMMON_RATE_LIMIT_MAX_REQUESTS=20
+
+     # MongoDB Settings
+     MONGO_INITDB_DATABASE=intracom_database
+     MONGO_INITDB_ROOT_USERNAME=root
+     MONGO_INITDB_ROOT_PASSWORD=root
+     MONGODB_USER=<username>
+     MONGODB_PASSWORD=<password>
+     MONGODB_CONNECTION_STRING=mongodb://root:root@localhost:27017/
+     ```
+
+5. **Install Docker Desktop:**
+
+   - Download and install Docker Desktop from [Docker's official website](https://www.docker.com/products/docker-desktop).
+
+6. **Download MongoDB Image:**
+
+   - Pull the MongoDB community server image from Docker Hub:
+     ```sh
+     docker pull mongo:latest
+     ```
+
+7. **Configure and Run MongoDB Container:**
+
+   - Open Docker Desktop and create a new container with the following settings:
+     - **Container Name**: `intracom-database`
+     - **Port**: `27017`
+     - **Volumes**: `/path/to/intracom-be-06-2024/database -> /data`
+     - **Environment Variables**:
+       - `MONGO_INITDB_DATABASE`: `intracom_database`
+       - `MONGO_INITDB_ROOT_USERNAME`: `root`
+       - `MONGO_INITDB_ROOT_PASSWORD`: `root`
+     - Click `Run`.
+
+8. **Run the Application:**
+
+   - Start the application with:
+     ```sh
+     npm run dev
+     ```
+
+9. **Access the Application:**
+   - Open your browser and navigate to `http://localhost:8080` to see the running application.
+
+---
+
+For further details or troubleshooting, please refer to the respective documentation of each tool used.
+
+---
