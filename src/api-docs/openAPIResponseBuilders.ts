@@ -16,6 +16,18 @@ export function createApiResponse(schema: z.ZodTypeAny, description: string, sta
   };
 }
 
+export function createPostApiResponse(schema: z.ZodTypeAny, description: string, statusCode = StatusCodes.CREATED) {
+  return {
+    [statusCode]: {
+      description,
+      content: {
+        'application/json': {
+          schema: ServiceResponseSchema(schema),
+        },
+      },
+    },
+  };
+}
 export function createPostBodyParams(zodSchema: z.ZodTypeAny) {
   return {
     content: {

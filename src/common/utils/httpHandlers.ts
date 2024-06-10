@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { ZodError, ZodIssue, ZodSchema } from 'zod';
+import { ZodError, ZodSchema } from 'zod';
 
+// import { ZodIssue } from 'zod';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 
 export const handleServiceResponse = (serviceResponse: ServiceResponse<any>, response: Response) => {
@@ -17,24 +18,36 @@ export const validateRequest = (schema: ZodSchema) => (req: Request, res: Respon
     console.log('Error', err);
     // const errorMessage = concatZodErrorMessages(err as ZodError);
     const errorMessage = `Invalid input: ${(err as ZodError).errors.map((e) => e.message).join(', ')}`;
-
     const statusCode = StatusCodes.BAD_REQUEST;
     res.status(statusCode).send(new ServiceResponse<null>(ResponseStatus.Failed, errorMessage, null, statusCode));
   }
 };
 
-const concatZodErrorMessages = (err: ZodError): string => {
-  let errorMessage: string = '';
-
-  err.errors.forEach((error: ZodIssue) => {
-    const attributeName = toTitleCase(error.path[0] as string);
-    errorMessage += `${attributeName} ${error.message}. `;
-  });
-  return errorMessage.trim();
+export const validatePostRequest = (schema: ZodSchema) => async (req: Request, res: Response, next: NextFunction) => {
+  console.log(req.body);
+  try {
+    await schema.parseAsync(req.body);
+    next();
+  } catch (err) {
+    console.log('Error', err);
+    const errorMessage = `${(err as ZodError).errors.map((e) => e.message)}`;
+    const statusCode = StatusCodes.BAD_REQUEST;
+    res.status(statusCode).send(new ServiceResponse<null>(ResponseStatus.Failed, errorMessage, null, statusCode));
+  }
 };
 
-const toTitleCase = (str: string) => {
-  return str.replace(/\p{L}+('\p{L}+)?/gu, function (txt) {
-    return txt.charAt(0).toUpperCase() + txt.slice(1);
-  });
-};
+// const concatZodErrorMessages = (err: ZodError): string => {
+//   let errorMessage: string = '';
+
+//   err.errors.forEach((error: ZodIssue) => {
+//     const attributeName = toTitleCase(error.path[0] as string);
+//     errorMessage += `${attributeName} ${error.message}. `;
+//   });
+//   return errorMessage.trim();
+// };
+
+// const toTitleCase = (str: string) => {
+//   return str.replace(/\p{L}+('\p{L}+)?/gu, function (txt) {
+//     return txt.charAt(0).toUpperCase() + txt.slice(1);
+//   });
+// };
