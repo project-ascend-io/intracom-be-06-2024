@@ -7,6 +7,8 @@ export const users: User[] = [
     id: 1,
     name: 'Alice',
     email: 'alice@example.com',
+    // This adds 'password' to part of user's record in database
+    password: 'alicespassword',
     age: 42,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -15,6 +17,8 @@ export const users: User[] = [
     id: 2,
     name: 'Bob',
     email: 'bob@example.com',
+    // This adds 'password' to part of user's record in database
+    password: 'bobspassword',
     age: 21,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -33,6 +37,17 @@ export const userRepository = {
 
   findByIdAsync: async (id: number): Promise<User | null> => {
     return users.find((user) => user.id === id) || null;
+  },
+
+  // This finds a user by their email address or logs an error if not found
+  findByEmailAsync: async (email: string): Promise<User | null> => {
+    try {
+      await userRepository.startConnection();
+      return await UserModel.findOne({ email });
+    } catch (err) {
+      console.error('Error finding user by email: ', err);
+      throw err;
+    }
   },
 
   insertUser: async (user: User): Promise<User> => {

@@ -61,5 +61,22 @@ export const userRouter: Router = (() => {
     }
   );
 
+  // This creates a new signup route
+  userRegistry.registerPath({
+    method: 'post',
+    path: '/signup',
+    tags: ['User'],
+    responses: createApiResponse(UserSchema, 'Success'),
+    request: {
+      params: NewUserSchema,
+      body: createPostBodyParams(NewUserSchema),
+    },
+  });
+
+  router.post('/signup', async (_req: Request, res: Response) => {
+    const serviceResponse = await userService.signup(_req);
+    handleServiceResponse(serviceResponse, res);
+  });
+
   return router;
 })();
