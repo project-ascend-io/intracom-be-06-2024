@@ -1,10 +1,13 @@
+import bcrypt from 'bcryptjs';
 import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import jwt from 'jsonwebtoken';
 
 import { NewUserSchema, User } from '@/api/user/userModel';
 import { userRepository } from '@/api/user/userRepository';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { logger } from '@/server';
+// import { config } from '@/config';
 
 export const userService = {
   // Retrieves all users from the database
@@ -44,11 +47,58 @@ export const userService = {
       const user = NewUserSchema.parse({ ...request.body });
       console.log('New User Schema', user);
 
+      // This initializes a variable to represent an existing user found in the repository by their email address
+      const existingUser = await userRepository.findByEmailAsync(user.email);
+
+      // This checks to see if the email address entered by the user already exists in the system, in which case it will throw an error
+      if (existingUser) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User already exists', null, StatusCodes.BAD_REQUEST);
+      }
+
       const newUser = await userRepository.insertUser(user);
 
       return new ServiceResponse<User>(ResponseStatus.Success, 'User created.', newUser, StatusCodes.OK);
     } catch (err) {
       const errorMessage = `userService - InsertUser - Error Message`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  // This checks if the password entered initially matches the one entered when prompted to 'Confirm Password' and throws an error if validation fails. Then it checks to see if the email address entered by the user already exists already exists in the system, in which case it will throw an error and not allow the user to signup. If it passes both checks, it will create a new user and save it to the repository.
+  signup: async (request: Request): Promise<ServiceResponse<string | null>> => {
+    try {
+      const { email, password, confirmPassword } = request.body;
+
+      if (password !== confirmPassword) {
+        return new ServiceResponse(ResponseStatus.Failed, 'Passwords do not match', null, StatusCodes.BAD_REQUEST);
+      }
+
+      const existingUser = await userRepository.findByEmailAsync(email);
+      if (existingUser) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User already exists', null, StatusCodes.BAD_REQUEST);
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const newUser: User = {
+        id: Date.now(),
+        name: request.body.name,
+        email,
+        password: hashedPassword,
+        age: request.body.age,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await userRepository.insertUser(newUser);
+
+      const payload = { id: newUser.id };
+      const token = jwt.sign(payload, config.jwtSecret, { expiresIn: '1h' });
+
+      return new ServiceResponse<string>(ResponseStatus.Success, 'User created.', token, StatusCodes.OK);
+    } catch (err) {
+      const errorMessage = `userService - Signup - Error Message: ${err.message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }

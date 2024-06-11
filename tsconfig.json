@@ -15,7 +15,8 @@
     "noPropertyAccessFromIndexSignature": false,
     "skipLibCheck": true,
     "ignoreDeprecations": "5.0",
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals", "node"],
+    "typeRoots": ["node_modules/@types", "src/types"]
   },
   "extends": [],
   "exclude": ["node_modules"],
