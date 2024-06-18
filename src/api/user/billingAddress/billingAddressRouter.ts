@@ -2,7 +2,7 @@ import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import express, { Request, Response, Router } from 'express';
 
 import { BillingAddressSchema, NewBillingAddressSchema } from '@/api/user/billingAddress/billingAddressModel';
-import { BillingAddressService } from '@/api/user/billingAddress/billingAddressService';
+import { billingAddressService } from '@/api/user/billingAddress/billingAddressService';
 import { createPostApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validatePostRequest } from '@/common/utils/httpHandlers';
 
@@ -25,7 +25,7 @@ export const billingAddressRouter: Router = (() => {
   });
 
   router.post('/', validatePostRequest(BillingAddressSchema), async (_req: Request, res: Response) => {
-    const serviceResponse = await BillingAddressService.insertBillingAddress(_req);
+    const serviceResponse = await billingAddressService.insertBillingAddress(_req.body);
     handleServiceResponse(serviceResponse, res);
   });
 

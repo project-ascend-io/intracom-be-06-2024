@@ -1,4 +1,3 @@
-import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
 import { NewBillingAddressSchema } from '@/api/user/billingAddress/billingAddressModel';
@@ -8,12 +7,11 @@ import { logger } from '@/server';
 
 import { BillingAddress } from './billingAddressModel';
 
-export const BillingAddressService = {
-  insertBillingAddress: async (request: Request): Promise<ServiceResponse<BillingAddress | null>> => {
+export const billingAddressService = {
+  insertBillingAddress: async (body: BillingAddress): Promise<ServiceResponse<BillingAddress | null>> => {
     try {
-      console.log('Body: ', request.body);
-      console.log('Params: ', request.params);
-      const billingAddress = NewBillingAddressSchema.parse({ ...request.body });
+      console.log('Body: ', body);
+      const billingAddress = NewBillingAddressSchema.parse({ ...body });
       console.log('New Billing Address Schema', billingAddress);
 
       const newBillingAddress = await billingAddressRepository.insertBillingAddress(billingAddress);
