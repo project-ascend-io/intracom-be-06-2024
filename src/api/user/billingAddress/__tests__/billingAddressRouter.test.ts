@@ -1,11 +1,26 @@
 import { StatusCodes } from 'http-status-codes';
 import request from 'supertest';
+import { afterEach, vi } from 'vitest';
+import { Mock } from 'vitest';
 
 import { BillingAddress } from '@/api/user/billingAddress/billingAddressModel';
 import { ServiceResponse } from '@/common/models/serviceResponse';
+import { ResponseStatus } from '@/common/models/serviceResponse';
 import { app } from '@/server';
 
+import { billingAddressService } from '../billingAddressService';
+
+vi.mock('../billingAddressService', () => ({
+  billingAddressService: {
+    insertBillingAddress: vi.fn(),
+  },
+}));
+
 describe('Billing Address Endpoints', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe('POST /users/billing-address', () => {
     it('should return a new Billing Address created', async () => {
       // Act
@@ -17,13 +32,21 @@ describe('Billing Address Endpoints', () => {
         country: 'USA',
       };
 
+      const responseMock = new ServiceResponse<BillingAddress>(
+        ResponseStatus.Success,
+        'Billing Address created.',
+        validBody,
+        StatusCodes.CREATED
+      );
+
+      (billingAddressService.insertBillingAddress as Mock).mockReturnValue(responseMock);
+
       const response = await request(app).post('/users/billing-address').send(validBody);
-      const responseBody: ServiceResponse<BillingAddress[]> = response.body;
 
       // Assert
       expect(response.statusCode).toEqual(StatusCodes.CREATED);
-      expect(responseBody.success).toBeTruthy();
-      expect(responseBody.message).toContain('Billing Address created');
+      expect(response.body.success).toBeTruthy();
+      expect(response.body.message).toContain('Billing Address created');
     });
 
     it('should return a bad request for invalid body', async () => {
