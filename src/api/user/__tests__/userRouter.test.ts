@@ -1,10 +1,15 @@
 import { StatusCodes } from 'http-status-codes';
 import request from 'supertest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { User } from '@/api/user/userModel';
 import { users } from '@/api/user/userRepository';
+// Added import
+import { userService } from '@/api/user/userService';
 import { ServiceResponse } from '@/common/models/serviceResponse';
 import { app } from '@/server';
+
+vi.mock('@/api/user/userService');
 
 describe('User API Endpoints', () => {
   describe('GET /users', () => {
@@ -66,6 +71,75 @@ describe('User API Endpoints', () => {
       expect(responseBody.success).toBeFalsy();
       expect(responseBody.message).toContain('Invalid input');
       expect(responseBody.responseObject).toBeNull();
+    });
+  });
+
+  describe('POST /users/signup', () => {
+    it('should sign up a new user', async () => {
+      const requestBody = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: 'password123',
+        confirmPassword: 'password123',
+        age: 30,
+      };
+      (userService.signup as Mock).mockResolvedValue({ status: 'success', data: 'token' });
+
+      const response = await request(app).post('/users/signup').send(requestBody);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toBe('token');
+    });
+
+    it('should handle passwords do not match', async () => {
+      const requestBody = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: 'password123',
+        confirmPassword: 'password456',
+        age: 30,
+      };
+      (userService.signup as Mock).mockResolvedValue({ status: 'failed', message: 'Passwords do not match' });
+
+      const response = await request(app).post('/users/signup').send(requestBody);
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('Passwords do not match');
+    });
+
+    it('should handle user already exists', async () => {
+      const requestBody = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: 'password123',
+        confirmPassword: 'password123',
+        age: 30,
+      };
+      (userService.signup as Mock).mockResolvedValue({ status: 'failed', message: 'User already exists' });
+
+      const response = await request(app).post('/users/signup').send(requestBody);
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('User already exists');
+    });
+
+    it('should handle errors', async () => {
+      const requestBody = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: 'password123',
+        confirmPassword: 'password123',
+        age: 30,
+      };
+      (userService.signup as Mock).mockResolvedValue({
+        status: 'failed',
+        message: 'userService - Signup - Error Message',
+      });
+
+      const response = await request(app).post('/users/signup').send(requestBody);
+
+      expect(response.status).toBe(500);
+      expect(response.body.message).toContain('userService - Signup - Error Message');
     });
   });
 });
