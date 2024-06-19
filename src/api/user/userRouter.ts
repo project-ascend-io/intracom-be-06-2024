@@ -2,8 +2,9 @@ import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import express, { Request, Response, Router } from 'express';
 import { z } from 'zod';
 
-import { GetUserSchema, NewUserSchema, UserSchema } from '@/api/user/userModel';
+import { NewUserSchema, UserSchema } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
+import { GetUserSchema } from '@/api/user/userValidation';
 import { createApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '@/common/utils/httpHandlers';
 
@@ -35,7 +36,7 @@ export const userRouter: Router = (() => {
   });
 
   router.get('/:id', validateRequest(GetUserSchema), async (req: Request, res: Response) => {
-    const id = parseInt(req.params.id as string, 10);
+    const id = req.params.id as string;
     const serviceResponse = await userService.findById(id);
     handleServiceResponse(serviceResponse, res);
   });
@@ -61,7 +62,6 @@ export const userRouter: Router = (() => {
     }
   );
 
-  // This creates a new signup route
   userRegistry.registerPath({
     method: 'post',
     path: '/signup',

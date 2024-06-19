@@ -1,10 +1,10 @@
+import { ObjectId } from 'mongodb';
 import { z } from 'zod';
 
 export const commonValidations = {
-  id: z
+  _id: z
     .string()
-    .refine((data) => !isNaN(Number(data)), 'ID must be a numeric value')
-    .transform(Number)
-    .refine((num) => num > 0, 'ID must be a positive number'),
+    .refine((data) => ObjectId.isValid(data), '_id must be a valid ObjectId')
+    .transform((data) => new ObjectId(data)),
   // ... other common validations
 };

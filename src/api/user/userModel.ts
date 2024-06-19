@@ -1,51 +1,17 @@
-import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import bcrypt from 'bcryptjs';
 import mongoose, { Document, Model, Schema } from 'mongoose';
-import { z } from 'zod';
 
-import { commonValidations } from '@/common/utils/commonValidation';
-
-extendZodWithOpenApi(z);
-
-export type User = z.infer<typeof UserSchema>;
-export const UserSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  email: z.string().email(),
-  // This adds password as part of the structure (or schema) for a user in the database
-  // A schema is a logical representation of data that shows how the data in a database should be stored
-  password: z.string(),
-  age: z.number(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-});
-export const NewUserSchema = z.object({
-  name: z.string().openapi({ example: 'John' }),
-  email: z.string().openapi({ example: 'johndoe@example.com' }),
-  // This adds 'password' as part of the structure (or schema) for a new user in the database
-  // A schema is a logical representation of data that shows how the data in a database should be stored
-  password: z.string().openapi({ example: 'password' }),
-  age: z.number().openapi({ example: 19 }),
-});
-
-// Input Validation for 'GET users/:id' endpoint
-export const GetUserSchema = z.object({
-  params: z.object({ id: commonValidations.id }),
-});
+import { User } from '@/api/user/userSchema';
 
 const mongooseUserSchema = new Schema<User>({
-  name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  // This adds 'password' as a required field to the structure (or schema) for a user in the database
+  username: { type: String, required: true },
   password: { type: String, required: true },
-  age: { type: Number, required: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
 
-// This hashes the password before saving it
-mongooseUserSchema.pre<User>('save', async function (next) {
+mongooseUserSchema.pre<User & Document>('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }
