@@ -1,7 +1,7 @@
 import { StatusCodes } from 'http-status-codes';
 import mongoose from 'mongoose';
 import request from 'supertest';
-import { afterEach, beforeEach, describe, expect, it, Mock, TaskContext, TestContext, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, Mock, TestContext, vi } from 'vitest';
 
 import { User } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
@@ -17,11 +17,11 @@ vi.mock('../userService', () => ({
   },
 }));
 
-interface TaskContext {
+interface UserTaskContext {
   userList: User[];
 }
 
-type UserEndpointTestContext = TestContext & TaskContext;
+type UserEndpointTestContext = TestContext & UserTaskContext;
 
 describe('User API Endpoints', () => {
   beforeEach(async (context: UserEndpointTestContext) => {
@@ -62,7 +62,7 @@ describe('User API Endpoints', () => {
   });
 
   describe('GET /users/:id', () => {
-    it('should return a user for a valid ID', async ({ userList }) => {
+    it('should return a user for a valid ID', async ({ userList }: UserEndpointTestContext) => {
       // Arrange
       const testId = userList['1'].id;
       const expectedUser = userList.find((user: User) => user.id === testId) as User;
