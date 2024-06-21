@@ -1,10 +1,10 @@
+// eslint-disable-next-line simple-import-sort/imports
 import bcrypt from 'bcryptjs';
 // Added imports
 import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import jwt from 'jsonwebtoken';
 import { describe, expect, it, Mock, vi } from 'vitest';
-
 import { User } from '@/api/user/userModel';
 import { userRepository } from '@/api/user/userRepository';
 import { userService } from '@/api/user/userService';
@@ -176,17 +176,16 @@ describe('userService', () => {
   });
 
   describe('signup', () => {
-    it('allows a new user to create an account', async () => {
+    it('signs up a new user', async () => {
       // Arrange
       const testRequest = {
-        id: 3,
-        name: 'Cigana',
-        email: 'cigana@example.com',
-        password: 'ciganaspassword',
-        // confirmPassword: 'ciganaspassword',
-        age: 35,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        body: {
+          name: 'Cigana',
+          email: 'cigana@example.com',
+          password: 'ciganaspassword',
+          confirmPassword: 'ciganaspassword',
+          age: 35,
+        },
       } as unknown as Request;
 
       (userRepository.findByEmailAsync as Mock).mockResolvedValue(null);
@@ -206,14 +205,13 @@ describe('userService', () => {
     it('handles errors for findByEmailAsync', async () => {
       // Arrange
       const testRequest = {
-        id: 3,
-        name: 'Cigana',
-        email: 'cigana@example.com',
-        password: 'ciganaspassword',
-        // confirmPassword: 'ciganaspassword',
-        age: 35,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        body: {
+          name: 'Cigana',
+          email: 'cigana@example.com',
+          password: 'ciganaspassword',
+          confirmPassword: 'ciganaspassword',
+          age: 35,
+        },
       } as unknown as Request;
 
       (userRepository.findByEmailAsync as Mock).mockRejectedValue(new Error('Database error'));
@@ -224,21 +222,20 @@ describe('userService', () => {
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.INTERNAL_SERVER_ERROR);
       expect(result.success).toBeFalsy();
-      expect(result.message).toContain(`userService - Signup - Error Message: ${err.message}`);
+      expect(result.message).toContain('Error signing up new user');
       expect(result.responseObject).toBeNull();
     });
 
     it('returns a bad request error for non-matching passwords', async () => {
       // Arrange
       const testRequest = {
-        id: 3,
-        name: 'Cigana',
-        email: 'cigana@example.com',
-        password: 'ciganaspassword',
-        // confirmPassword: 'ciganaspassword',
-        age: 35,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        body: {
+          name: 'Cigana',
+          email: 'cigana@example.com',
+          password: 'ciganaspassword',
+          confirmPassword: 'ciganaspassword',
+          age: 35,
+        },
       } as unknown as Request;
 
       (userRepository.findByEmailAsync as Mock).mockReturnValue(null);
@@ -256,17 +253,16 @@ describe('userService', () => {
     it('returns a bad request error for existing users', async () => {
       // Arrange
       const testRequest = {
-        id: 3,
-        name: 'Cigana',
-        email: 'cigana@example.com',
-        password: 'ciganaspassword',
-        // confirmPassword: 'ciganaspassword',
-        age: 35,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        body: {
+          name: 'Cigana',
+          email: 'cigana@example.com',
+          password: 'ciganaspassword',
+          confirmPassword: 'ciganaspassword',
+          age: 35,
+        },
       } as unknown as Request;
 
-      (userRepository.findByEmailAsync as Mock).mockReturnValue(null);
+      (userRepository.findByEmailAsync as Mock).mockResolvedValue(null);
 
       // Act
       const result = await userService.signup(testRequest);
