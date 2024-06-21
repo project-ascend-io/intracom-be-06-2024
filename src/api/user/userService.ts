@@ -91,7 +91,7 @@ export const userService = {
 
       const savedUser = await userRepository.insertUser(newUser);
 
-      const payload = { id: savedUser._id };
+      const payload = { id: savedUser.id };
       const { JWT_SECRET } = env;
       const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
 

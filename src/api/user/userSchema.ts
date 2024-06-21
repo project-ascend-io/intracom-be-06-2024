@@ -4,12 +4,12 @@ import { z } from 'zod';
 extendZodWithOpenApi(z);
 
 export const UserSchema = z.object({
-  _id: z.string(),
-  email: z.string().email(),
-  username: z.string(),
-  password: z.string(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  id: z.string().openapi({ example: '' }),
+  email: z.string().email().openapi({ example: 'johndoe@example.com' }),
+  username: z.string().openapi({ example: 'johndoe' }),
+  password: z.string().openapi({ example: 'password' }),
+  createdAt: z.date().openapi({ example: new Date().toISOString() }),
+  updatedAt: z.date().openapi({ example: new Date().toISOString() }),
 });
 
 export const NewUserSchema = z.object({
