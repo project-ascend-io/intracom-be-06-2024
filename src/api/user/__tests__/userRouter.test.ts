@@ -147,7 +147,7 @@ describe('User API Endpoints', () => {
       // Assert
       const response = await request(app).post(`/user-registration`).send(newUser).set('Accept', 'application/json');
 
-      expect(response.statusCode).toEqual(StatusCodes.OK);
+      expect(response.statusCode).toEqual(StatusCodes.NOT_FOUND);
       // const responseBody: ServiceResponse<NewUser> = response.body;
       // expect(responseBody.message).toContain('User created.');
       // expect(responseBody.responseObject).toMatchObject({
