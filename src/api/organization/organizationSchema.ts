@@ -16,3 +16,4 @@ export const NewOrganizationSchema = z.object({
 });
 
 export type Organization = z.infer<typeof OrganizationSchema>;
+export type NewOrganization = z.infer<typeof NewOrganizationSchema>;

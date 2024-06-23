@@ -1,10 +1,11 @@
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
+import mongoose from 'mongoose';
 import { z } from 'zod';
 
 extendZodWithOpenApi(z);
 
 export const UserSchema = z.object({
-  id: z.string().openapi({ example: '' }),
+  id: z.string().openapi({ example: new mongoose.mongo.ObjectId().toString() }),
   email: z.string().email().openapi({ example: 'johndoe@example.com' }),
   username: z.string().openapi({ example: 'johndoe' }),
   password: z.string().openapi({ example: 'password' }),
