@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { ZodError, ZodIssue, ZodSchema } from 'zod';
+import { ZodError, ZodSchema } from 'zod';
 
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 
@@ -9,7 +9,7 @@ export const handleServiceResponse = (serviceResponse: ServiceResponse<any>, res
 };
 
 export const validateRequest = (schema: ZodSchema) => (req: Request, res: Response, next: NextFunction) => {
-  console.log(req.body);
+  console.log('Validate Request - Body: ', req.body);
   try {
     schema.parse({ body: req.body, query: req.query, params: req.params });
     next();
@@ -23,18 +23,18 @@ export const validateRequest = (schema: ZodSchema) => (req: Request, res: Respon
   }
 };
 
-const concatZodErrorMessages = (err: ZodError): string => {
-  let errorMessage: string = '';
+// const concatZodErrorMessages = (err: ZodError): string => {
+//   let errorMessage: string = '';
+//
+//   err.errors.forEach((error: ZodIssue) => {
+//     const attributeName = toTitleCase(error.path[0] as string);
+//     errorMessage += `${attributeName} ${error.message}. `;
+//   });
+//   return errorMessage.trim();
+// };
 
-  err.errors.forEach((error: ZodIssue) => {
-    const attributeName = toTitleCase(error.path[0] as string);
-    errorMessage += `${attributeName} ${error.message}. `;
-  });
-  return errorMessage.trim();
-};
-
-const toTitleCase = (str: string) => {
-  return str.replace(/\p{L}+('\p{L}+)?/gu, function (txt) {
-    return txt.charAt(0).toUpperCase() + txt.slice(1);
-  });
-};
+// const toTitleCase = (str: string) => {
+//   return str.replace(/\p{L}+('\p{L}+)?/gu, function (txt) {
+//     return txt.charAt(0).toUpperCase() + txt.slice(1);
+//   });
+// };

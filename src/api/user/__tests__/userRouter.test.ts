@@ -127,8 +127,8 @@ describe('User API Endpoints', () => {
     });
   });
 
-  describe('POST /user-registration', () => {
-    it('should return the new registered user', async () => {
+  describe('POST /users', () => {
+    it('should return the newly created user', async () => {
       // Act
       const newUser: NewUser = {
         email: 'newUser@gmail.com',
@@ -145,9 +145,9 @@ describe('User API Endpoints', () => {
       (userService.signup as Mock).mockReturnValue(responseMock);
 
       // Assert
-      const response = await request(app).post(`/user-registration`).send(newUser).set('Accept', 'application/json');
+      const response = await request(app).post(`/users`).send(newUser).set('Accept', 'application/json');
 
-      expect(response.statusCode).toEqual(StatusCodes.NOT_FOUND);
+      expect(response.statusCode).toEqual(StatusCodes.OK);
       // const responseBody: ServiceResponse<NewUser> = response.body;
       // expect(responseBody.message).toContain('User created.');
       // expect(responseBody.responseObject).toMatchObject({

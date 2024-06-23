@@ -31,10 +31,8 @@ app.use(requestLogger);
 app.use('/health-check', healthCheckRouter);
 app.use('/users', userRouter);
 
-if (env.NODE_ENV == 'development') {
-  // Swagger UI
-  app.use(openAPIRouter);
-}
+// Swagger UI
+app.use(openAPIRouter);
 
 // Error handlers
 app.use(errorHandler());

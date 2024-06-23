@@ -53,15 +53,11 @@ export const userRouter: Router = (() => {
     },
   });
 
-  router.post(
-    '/',
-    //validateRequest(NewUserSchema),
-    async (_req: Request, res: Response) => {
-      console.log('Async call');
-      const serviceResponse = await userService.insertUser(_req);
-      handleServiceResponse(serviceResponse, res);
-    }
-  );
+  router.post('/users', validateRequest(NewUserSchema), async (_req: Request, res: Response) => {
+    console.log('Async call');
+    const serviceResponse = await userService.insertUser(_req);
+    handleServiceResponse(serviceResponse, res);
+  });
 
   userRegistry.registerPath({
     method: 'post',
