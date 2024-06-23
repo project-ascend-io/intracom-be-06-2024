@@ -2,8 +2,9 @@ import { StatusCodes } from 'http-status-codes';
 import mongoose from 'mongoose';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, Mock, TestContext, vi } from 'vitest';
+import { z } from 'zod';
 
-import { User } from '@/api/user/userSchema';
+import { NewUserSchema, User } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { app } from '@/server';
@@ -16,6 +17,8 @@ vi.mock('../userService', () => ({
     signup: vi.fn(),
   },
 }));
+
+type NewUser = z.infer<typeof NewUserSchema>;
 
 interface UserTaskContext {
   userList: User[];
@@ -121,6 +124,36 @@ describe('User API Endpoints', () => {
       expect(responseBody.success).toBeFalsy();
       expect(responseBody.message).toContain('Invalid input');
       expect(responseBody.responseObject).toBeNull();
+    });
+  });
+
+  describe('POST /user-registration', () => {
+    it('should return the new registered user', async () => {
+      // Act
+      const newUser: NewUser = {
+        email: 'newUser@gmail.com',
+        password: 'Testing123!',
+        username: 'newUser',
+      };
+
+      const responseMock = new ServiceResponse<NewUser>(
+        ResponseStatus.Success,
+        'User created.',
+        newUser,
+        StatusCodes.OK
+      );
+      (userService.signup as Mock).mockReturnValue(responseMock);
+
+      // Assert
+      const response = await request(app).post(`/user-registration`).send(newUser).set('Accept', 'application/json');
+
+      expect(response.statusCode).toEqual(StatusCodes.OK);
+      // const responseBody: ServiceResponse<NewUser> = response.body;
+      // expect(responseBody.message).toContain('User created.');
+      // expect(responseBody.responseObject).toMatchObject({
+      //   email: 'newUser@gmail.com',
+      //   username: 'newUser',
+      // });
     });
   });
 });

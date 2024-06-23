@@ -68,11 +68,7 @@ export const userService = {
 
   signup: async (request: Request): Promise<ServiceResponse<string | null>> => {
     try {
-      const { email, username, password, confirmPassword } = request.body;
-
-      if (password !== confirmPassword) {
-        return new ServiceResponse(ResponseStatus.Failed, 'Passwords do not match', null, StatusCodes.BAD_REQUEST);
-      }
+      const { email, username, password } = request.body;
 
       const existingUser = await userRepository.findByEmailAsync(email);
       if (existingUser) {
