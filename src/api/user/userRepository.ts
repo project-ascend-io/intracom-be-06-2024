@@ -1,6 +1,7 @@
 import { User, UserModel } from '@/api/user/userModel';
 
 import { mongoDatabase } from '../mongoDatabase';
+import { NewUser } from './__tests__/userService.test';
 
 export const users: User[] = [
   {
@@ -50,7 +51,7 @@ export const userRepository = {
     }
   },
 
-  insertUser: async (user: User): Promise<User> => {
+  insertUser: async (user: NewUser): Promise<User> => {
     try {
       await userRepository.startConnection();
       const newUser = new UserModel(user);

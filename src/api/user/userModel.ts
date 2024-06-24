@@ -13,8 +13,6 @@ export const UserSchema = z.object({
   id: z.number(),
   name: z.string(),
   email: z.string().email(),
-  // This adds password as part of the structure (or schema) for a user in the database
-  // A schema is a logical representation of data that shows how the data in a database should be stored
   password: z.string(),
   age: z.number(),
   createdAt: z.date(),
@@ -23,8 +21,6 @@ export const UserSchema = z.object({
 export const NewUserSchema = z.object({
   name: z.string().openapi({ example: 'John' }),
   email: z.string().openapi({ example: 'johndoe@example.com' }),
-  // This adds 'password' as part of the structure (or schema) for a new user in the database
-  // A schema is a logical representation of data that shows how the data in a database should be stored
   password: z.string().openapi({ example: 'password' }),
   age: z.number().openapi({ example: 19 }),
 });
@@ -45,7 +41,7 @@ const mongooseUserSchema = new Schema<User>({
 });
 
 // This hashes the password before saving it
-mongooseUserSchema.pre<User>('save', async function (next) {
+mongooseUserSchema.pre<User & Document>('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }

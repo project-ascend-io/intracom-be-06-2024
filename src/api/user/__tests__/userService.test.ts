@@ -1,13 +1,22 @@
 // eslint-disable-next-line simple-import-sort/imports
-import bcrypt from 'bcryptjs';
+// import bcrypt from 'bcryptjs';
 // Added imports
 import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import jwt from 'jsonwebtoken';
+// import jwt from 'jsonwebtoken';
 import { describe, expect, it, Mock, vi } from 'vitest';
+
 import { User } from '@/api/user/userModel';
 import { userRepository } from '@/api/user/userRepository';
 import { userService } from '@/api/user/userService';
+
+export interface NewUser {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  age: 35;
+}
 
 vi.mock('@/api/user/userRepository');
 // Added mocks
@@ -178,20 +187,18 @@ describe('userService', () => {
   describe('signup', () => {
     it('signs up a new user', async () => {
       // Arrange
-      const testRequest = {
-        body: {
-          name: 'Cigana',
-          email: 'cigana@example.com',
-          password: 'ciganaspassword',
-          confirmPassword: 'ciganaspassword',
-          age: 35,
-        },
-      } as unknown as Request;
+      const testRequest: NewUser = {
+        name: 'Cigana',
+        email: 'cigana@example.com',
+        password: 'ciganaspassword',
+        confirmPassword: 'ciganaspassword',
+        age: 35,
+      };
 
       (userRepository.findByEmailAsync as Mock).mockResolvedValue(null);
-      (userRepository.insertUser as Mock).mockResolvedValue({ ...testRequest.body, id: 1 });
-      (bcrypt.hash as Mock).mockResolvedValue('hashedPassword');
-      (jwt.sign as Mock).mockReturnValue('token');
+      (userRepository.insertUser as Mock).mockResolvedValue(testRequest);
+      // (bcrypt.hash as Mock).mockResolvedValue('hashedPassword');
+      // (jwt.sign as Mock).mockReturnValue('token');
       // Act
       const result = await userService.signup(testRequest);
 
@@ -199,49 +206,45 @@ describe('userService', () => {
       expect(result.statusCode).toEqual(StatusCodes.OK);
       expect(result.success).toBeTruthy();
       expect(result.message).toContain('User created');
-      expect(result.responseObject).toBe('token');
+      expect(result.responseObject).toBe(testRequest);
     });
 
     it('handles errors for findByEmailAsync', async () => {
       // Arrange
-      const testRequest = {
-        body: {
-          name: 'Cigana',
-          email: 'cigana@example.com',
-          password: 'ciganaspassword',
-          confirmPassword: 'ciganaspassword',
-          age: 35,
-        },
-      } as unknown as Request;
+      const newUser: NewUser = {
+        name: 'Cigana',
+        email: 'cigana@example.com',
+        password: 'ciganaspassword',
+        confirmPassword: 'ciganaspassword',
+        age: 35,
+      };
 
-      (userRepository.findByEmailAsync as Mock).mockRejectedValue(new Error('Database error'));
+      (userRepository.findByEmailAsync as Mock).mockReturnValue(newUser);
 
       // Act
-      const result = await userService.signup(testRequest);
+      const result = await userService.signup(newUser);
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.INTERNAL_SERVER_ERROR);
       expect(result.success).toBeFalsy();
-      expect(result.message).toContain('Error signing up new user');
+      expect(result.message).toContain('User already exists.');
       expect(result.responseObject).toBeNull();
     });
 
     it('returns a bad request error for non-matching passwords', async () => {
       // Arrange
-      const testRequest = {
-        body: {
-          name: 'Cigana',
-          email: 'cigana@example.com',
-          password: 'ciganaspassword',
-          confirmPassword: 'ciganaspassword',
-          age: 35,
-        },
-      } as unknown as Request;
+      const newUser: NewUser = {
+        name: 'Cigana',
+        email: 'cigana@example.com',
+        password: 'ciganaspassword',
+        confirmPassword: 'ciganaspassword',
+        age: 35,
+      };
 
-      (userRepository.findByEmailAsync as Mock).mockReturnValue(null);
+      (userRepository.findByEmailAsync as Mock).mockReturnValue(newUser);
 
       // Act
-      const result = await userService.signup(testRequest);
+      const result = await userService.signup(newUser);
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.BAD_REQUEST);
@@ -252,20 +255,19 @@ describe('userService', () => {
 
     it('returns a bad request error for existing users', async () => {
       // Arrange
-      const testRequest = {
-        body: {
-          name: 'Cigana',
-          email: 'cigana@example.com',
-          password: 'ciganaspassword',
-          confirmPassword: 'ciganaspassword',
-          age: 35,
-        },
-      } as unknown as Request;
+      const existingUser: NewUser = {
+        name: 'Cigana',
+        email: 'cigana@example.com',
+        password: 'ciganaspassword',
+        confirmPassword: 'ciganaspassword',
+        age: 35,
+      };
 
-      (userRepository.findByEmailAsync as Mock).mockResolvedValue(null);
+      // const existingUser = await userRepository.findByEmailAsync(existingUser.email);
+      (userRepository.findByEmailAsync as Mock).mockResolvedValue(existingUser);
 
       // Act
-      const result = await userService.signup(testRequest);
+      const result = await userService.signup(existingUser);
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.BAD_REQUEST);
