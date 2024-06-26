@@ -225,7 +225,7 @@ describe('userService', () => {
       const result = await userService.signup(newUser);
 
       // Assert
-      expect(result.statusCode).toEqual(StatusCodes.INTERNAL_SERVER_ERROR);
+      expect(result.statusCode).toEqual(StatusCodes.BAD_REQUEST);
       expect(result.success).toBeFalsy();
       expect(result.message).toContain('User already exists.');
       expect(result.responseObject).toBeNull();
@@ -237,7 +237,7 @@ describe('userService', () => {
         name: 'Cigana',
         email: 'cigana@example.com',
         password: 'ciganaspassword',
-        confirmPassword: 'ciganaspassword',
+        confirmPassword: 'notpassword',
         age: 35,
       };
 

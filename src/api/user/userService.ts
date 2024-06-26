@@ -67,11 +67,14 @@ export const userService = {
   signup: async (user: NewUser): Promise<ServiceResponse<User | null>> => {
     try {
       if (user.password !== user.confirmPassword) {
+        console.log('Passwords do not match.');
         throw new Error('Passwords do not match.');
       }
 
       const existingUser = await userRepository.findByEmailAsync(user.email);
       if (existingUser) {
+        console.log('made it');
+        console.log('User already exists.');
         throw new Error('User already exists.');
       }
 
@@ -81,8 +84,14 @@ export const userService = {
     } catch (err) {
       const errorMessage = `userService - Signup - Error Message: ${err.message}`;
       logger.error(errorMessage);
+      console.log('catch block is working', err.message);
+      console.log('made it2');
+      let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
+      if (err.message == 'Passwords do not match.' || err.message == 'User already exists.') {
+        statusCode = StatusCodes.BAD_REQUEST;
+      }
 
-      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, statusCode);
     }
   },
 };
