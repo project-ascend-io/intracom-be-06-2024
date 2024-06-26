@@ -16,6 +16,7 @@ const logger = pino({ name: 'server start' });
 const app: Express = express();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Set the application to trust the reverse proxy
 app.set('trust proxy', true);

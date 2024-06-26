@@ -128,12 +128,26 @@ describe('User API Endpoints', () => {
   });
 
   describe('POST /users', () => {
+    it('should return password does not pass complexity', async () => {
+      // Act
+      const newUser: NewUser = {
+        email: 'newUser@gmail.com',
+        password: 'testing',
+        username: 'newUser',
+        organization: 'Example Corp.',
+      };
+      // Assert
+      const response = await request(app).post(`/users`).send(newUser).set('Accept', 'application/json');
+
+      expect(response.statusCode).toEqual(StatusCodes.BAD_REQUEST);
+    });
     it('should return the newly created user', async () => {
       // Act
       const newUser: NewUser = {
         email: 'newUser@gmail.com',
         password: 'Testing123!',
         username: 'newUser',
+        organization: 'Example Corp.',
       };
 
       const responseMock = new ServiceResponse<NewUser>(
@@ -142,18 +156,18 @@ describe('User API Endpoints', () => {
         newUser,
         StatusCodes.OK
       );
-      (userService.signup as Mock).mockReturnValue(responseMock);
+      (userService.insertUser as Mock).mockReturnValue(responseMock);
 
       // Assert
       const response = await request(app).post(`/users`).send(newUser).set('Accept', 'application/json');
 
       expect(response.statusCode).toEqual(StatusCodes.OK);
-      // const responseBody: ServiceResponse<NewUser> = response.body;
-      // expect(responseBody.message).toContain('User created.');
-      // expect(responseBody.responseObject).toMatchObject({
-      //   email: 'newUser@gmail.com',
-      //   username: 'newUser',
-      // });
+      const responseBody: ServiceResponse<NewUser> = response.body;
+      expect(responseBody.message).toContain('User created.');
+      expect(responseBody.responseObject).toMatchObject({
+        email: 'newUser@gmail.com',
+        username: 'newUser',
+      });
     });
   });
 });
