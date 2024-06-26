@@ -3,8 +3,9 @@ import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import jwt from 'jsonwebtoken';
 
+import { organizationRepository } from '@/api/organization/organizationRepository';
 import { userRepository } from '@/api/user/userRepository';
-import { BasicUser, User, UserAndDates } from '@/api/user/userSchema';
+import { BasicUser, User, UserAndDates, UserResponse } from '@/api/user/userSchema';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { env } from '@/common/utils/envConfig';
 import { logger } from '@/server';
@@ -39,7 +40,7 @@ export const userService = {
     }
   },
 
-  insertUser: async (user: BasicUser): Promise<ServiceResponse<User | null>> => {
+  insertUser: async (user: BasicUser): Promise<ServiceResponse<UserResponse | null>> => {
     try {
       const existingUser = await userRepository.findByEmailAsync(user.email);
 
@@ -52,8 +53,20 @@ export const userService = {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
+      const newOrg = await organizationRepository.insert({
+        name: user.organization,
+      });
 
-      return new ServiceResponse<User>(ResponseStatus.Success, 'User created.', newUser, StatusCodes.OK);
+      const savedUser = {
+        id: newUser.id,
+        email: newUser.email,
+        username: newUser.username,
+        organization_id: newOrg.id,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.updatedAt,
+      };
+
+      return new ServiceResponse<UserResponse>(ResponseStatus.Success, 'User created.', savedUser, StatusCodes.OK);
     } catch (err) {
       console.log(err);
       const errorMessage = `Error creating new user: , ${(err as Error).message}`;

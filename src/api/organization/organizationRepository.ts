@@ -1,6 +1,6 @@
 import { mongoDatabase } from '@/api/mongoDatabase';
 import { OrganizationModel } from '@/api/organization/organizationModel';
-import { NewOrganization, Organization } from '@/api/organization/organizationSchema';
+import { BasicOrganization, Organization } from '@/api/organization/organizationSchema';
 import { userRepository } from '@/api/user/userRepository';
 
 export const organizationRepository = {
@@ -8,10 +8,14 @@ export const organizationRepository = {
     return await mongoDatabase.initConnection();
   },
 
-  insert: async (org: NewOrganization): Promise<Organization> => {
+  insert: async (org: BasicOrganization): Promise<Organization> => {
     try {
       await userRepository.startConnection();
-      const newOrg = new OrganizationModel(org);
+      const newOrg = new OrganizationModel({
+        name: org.name,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
       return await newOrg.save();
     } catch (err) {
       console.error('[Error] OrganizationRepository - insert: ', err);

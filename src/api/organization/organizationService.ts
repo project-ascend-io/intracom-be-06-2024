@@ -1,12 +1,12 @@
 import { StatusCodes } from 'http-status-codes';
 
 import { organizationRepository } from '@/api/organization/organizationRepository';
-import { NewOrganization, Organization } from '@/api/organization/organizationSchema';
+import { BasicOrganization, Organization } from '@/api/organization/organizationSchema';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { logger } from '@/server';
 
 export const organizationService = {
-  insert: async (newOrg: NewOrganization): Promise<ServiceResponse<Organization | null>> => {
+  insert: async (newOrg: BasicOrganization): Promise<ServiceResponse<Organization | null>> => {
     try {
       console.log('Organization Service');
       const savedOrg = await organizationRepository.insert(newOrg);

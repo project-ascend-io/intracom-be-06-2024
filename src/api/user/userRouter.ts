@@ -2,7 +2,7 @@ import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import express, { Request, Response, Router } from 'express';
 import { z } from 'zod';
 
-import { UserComplete, UserSchema } from '@/api/user/userSchema';
+import { UserComplete, UserResponseSchema, UserSchema } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
 import { GetUserSchema, PostUserSchema } from '@/api/user/userValidation';
 import { createApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
@@ -45,7 +45,7 @@ export const userRouter: Router = (() => {
     method: 'post',
     path: '/users',
     tags: ['User'],
-    responses: createApiResponse(UserComplete, 'Success'),
+    responses: createApiResponse(UserResponseSchema, 'Success'),
     request: {
       body: createPostBodyParams(UserSchema),
     },
