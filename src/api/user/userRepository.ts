@@ -1,5 +1,5 @@
 import { UserModel } from '@/api/user/userModel';
-import { INewUserSchema, User } from '@/api/user/userSchema';
+import { User, UserAndDates } from '@/api/user/userSchema';
 
 import { mongoDatabase } from '../mongoDatabase';
 
@@ -38,7 +38,7 @@ export const userRepository = {
     }
   },
 
-  insertUser: async (user: INewUserSchema): Promise<User> => {
+  insertUser: async (user: UserAndDates): Promise<User> => {
     try {
       await userRepository.startConnection();
       const newUser = new UserModel(user);

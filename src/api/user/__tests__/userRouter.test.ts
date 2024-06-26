@@ -2,9 +2,8 @@ import { StatusCodes } from 'http-status-codes';
 import mongoose from 'mongoose';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, Mock, TestContext, vi } from 'vitest';
-import { z } from 'zod';
 
-import { NewUserSchema, User } from '@/api/user/userSchema';
+import { BasicUser, User } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { app } from '@/server';
@@ -17,8 +16,6 @@ vi.mock('../userService', () => ({
     signup: vi.fn(),
   },
 }));
-
-type NewUser = z.infer<typeof NewUserSchema>;
 
 interface UserTaskContext {
   userList: User[];
@@ -36,6 +33,7 @@ describe('User API Endpoints', () => {
         id: objectId.toString(),
         email: prefix + '@gmail.com',
         username: prefix,
+        organization: 'example corp',
         password: 'testing123!',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -130,7 +128,7 @@ describe('User API Endpoints', () => {
   describe('POST /users', () => {
     it('should return password does not pass complexity', async () => {
       // Act
-      const newUser: NewUser = {
+      const newUser: BasicUser = {
         email: 'newUser@gmail.com',
         password: 'testing',
         username: 'newUser',
@@ -143,14 +141,14 @@ describe('User API Endpoints', () => {
     });
     it('should return the newly created user', async () => {
       // Act
-      const newUser: NewUser = {
+      const newUser: BasicUser = {
         email: 'newUser@gmail.com',
         password: 'Testing123!',
         username: 'newUser',
         organization: 'Example Corp.',
       };
 
-      const responseMock = new ServiceResponse<NewUser>(
+      const responseMock = new ServiceResponse<BasicUser>(
         ResponseStatus.Success,
         'User created.',
         newUser,
@@ -162,7 +160,7 @@ describe('User API Endpoints', () => {
       const response = await request(app).post(`/users`).send(newUser).set('Accept', 'application/json');
 
       expect(response.statusCode).toEqual(StatusCodes.OK);
-      const responseBody: ServiceResponse<NewUser> = response.body;
+      const responseBody: ServiceResponse<BasicUser> = response.body;
       expect(responseBody.message).toContain('User created.');
       expect(responseBody.responseObject).toMatchObject({
         email: 'newUser@gmail.com',

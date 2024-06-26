@@ -4,7 +4,7 @@ import { StatusCodes } from 'http-status-codes';
 import jwt from 'jsonwebtoken';
 
 import { userRepository } from '@/api/user/userRepository';
-import { INewUserSchema, NewUserSchema, User } from '@/api/user/userSchema';
+import { BasicUser, User, UserAndDates } from '@/api/user/userSchema';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { env } from '@/common/utils/envConfig';
 import { logger } from '@/server';
@@ -39,12 +39,8 @@ export const userService = {
     }
   },
 
-  insertUser: async (request: Request): Promise<ServiceResponse<User | null>> => {
+  insertUser: async (user: BasicUser): Promise<ServiceResponse<User | null>> => {
     try {
-      console.log('Body: ', request.body);
-      const user = NewUserSchema.parse({ ...request.body });
-      console.log('New User Schema', user);
-
       const existingUser = await userRepository.findByEmailAsync(user.email);
 
       if (existingUser) {
@@ -60,7 +56,8 @@ export const userService = {
       return new ServiceResponse<User>(ResponseStatus.Success, 'User created.', newUser, StatusCodes.OK);
     } catch (err) {
       console.log(err);
-      const errorMessage = `[Error] userService - InsertUser: `;
+      const errorMessage = `Error creating new user: , ${(err as Error).message}`;
+      //const errorMessage = `[Error] userService - InsertUser: `;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
@@ -68,7 +65,7 @@ export const userService = {
 
   signup: async (request: Request): Promise<ServiceResponse<string | null>> => {
     try {
-      const { email, username, password } = request.body;
+      const { email, username, password, organization } = request.body;
 
       const existingUser = await userRepository.findByEmailAsync(email);
       if (existingUser) {
@@ -77,9 +74,10 @@ export const userService = {
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      const newUser: INewUserSchema = {
+      const newUser: UserAndDates = {
         email,
         username,
+        organization,
         password: hashedPassword,
         createdAt: new Date(),
         updatedAt: new Date(),

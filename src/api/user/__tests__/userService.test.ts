@@ -2,7 +2,6 @@ import { StatusCodes } from 'http-status-codes';
 import { describe, expect, it, Mock, vi } from 'vitest';
 
 import { userRepository } from '@/api/user/userRepository';
-// import { UserModel as User } from '@/api/user/userModel';
 import { User } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
 
@@ -20,6 +19,7 @@ describe('userService', () => {
       id: '1',
       username: 'Alice',
       email: 'alice@example.com',
+      organization: 'Example Corp.',
       password: 'Testing123!',
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -28,6 +28,7 @@ describe('userService', () => {
       id: '2',
       username: 'Bob',
       email: 'bob@example.com',
+      organization: 'Example Corp.',
       password: 'Testing123!',
       createdAt: new Date(),
       updatedAt: new Date(),
