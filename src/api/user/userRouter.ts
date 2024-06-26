@@ -7,6 +7,8 @@ import { userService } from '@/api/user/userService';
 import { createApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '@/common/utils/httpHandlers';
 
+import { NewUser } from './__tests__/userService.test';
+
 export const userRegistry = new OpenAPIRegistry();
 
 userRegistry.register('User', UserSchema);
@@ -60,6 +62,31 @@ export const userRouter: Router = (() => {
       handleServiceResponse(serviceResponse, res);
     }
   );
+
+  // This creates a new signup route
+  userRegistry.registerPath({
+    method: 'post',
+    path: '/signup',
+    tags: ['User'],
+    responses: createApiResponse(UserSchema, 'Success'),
+    request: {
+      params: NewUserSchema,
+      body: createPostBodyParams(NewUserSchema),
+    },
+  });
+
+  router.post('/signup', async (_req: Request, res: Response) => {
+    const newUser: NewUser = {
+      email: _req.body.email,
+      name: _req.body.name,
+      password: _req.body.password,
+      age: _req.body.age,
+      confirmPassword: _req.body.confirmPassword,
+    };
+
+    const serviceResponse = await userService.signup(newUser);
+    handleServiceResponse(serviceResponse, res);
+  });
 
   return router;
 })();
