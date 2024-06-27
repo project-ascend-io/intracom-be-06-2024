@@ -65,7 +65,14 @@ export const userService = {
           throw new Error(err.message);
         });
 
-      return new ServiceResponse<UserResponse>(ResponseStatus.Success, 'User created.', savedUser, StatusCodes.OK);
+      const userResponse: UserResponse = {
+        _id: savedUser._id,
+        username: savedUser.username,
+        email: savedUser.email,
+        organization: savedUser.organization._id,
+      };
+
+      return new ServiceResponse<UserResponse>(ResponseStatus.Success, 'User created.', userResponse, StatusCodes.OK);
     } catch (err) {
       console.log(err);
       const errorMessage = `Error creating new user: , ${(err as Error).message}`;
