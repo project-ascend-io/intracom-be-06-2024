@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, Mock, TestContext, vi } fr
 
 import { BasicUser, User } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
+import { PostUser } from '@/api/user/userValidation';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { app } from '@/server';
 
@@ -17,6 +18,11 @@ vi.mock('../userService', () => ({
   },
 }));
 
+vi.mock('../userRepository', () => ({
+  userRepository: {
+    insertUser: vi.fn(),
+  },
+}));
 interface UserTaskContext {
   userList: User[];
 }
@@ -30,10 +36,10 @@ describe('User API Endpoints', () => {
       const objectId = new mongoose.mongo.ObjectId();
       const prefix = `johndoe+${i}`;
       userList.push({
-        id: objectId.toString(),
+        _id: objectId,
         email: prefix + '@gmail.com',
         username: prefix,
-        organization: 'example corp',
+        organization: new mongoose.mongo.ObjectId(),
         password: 'testing123!',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -65,8 +71,8 @@ describe('User API Endpoints', () => {
   describe('GET /users/:id', () => {
     it('should return a user for a valid ID', async ({ userList }: UserEndpointTestContext) => {
       // Arrange
-      const testId = userList['1'].id;
-      const expectedUser = userList.find((user: User) => user.id === testId) as User;
+      const testId = userList['1']._id;
+      const expectedUser = userList.find((user: User) => user._id === testId) as User;
 
       const responseMock = new ServiceResponse<User>(
         ResponseStatus.Success,
@@ -128,7 +134,7 @@ describe('User API Endpoints', () => {
   describe('POST /users', () => {
     it('should return password does not pass complexity', async () => {
       // Act
-      const newUser: BasicUser = {
+      const newUser: PostUser = {
         email: 'newUser@gmail.com',
         password: 'testing',
         username: 'newUser',
@@ -141,14 +147,14 @@ describe('User API Endpoints', () => {
     });
     it('should return the newly created user', async () => {
       // Act
-      const newUser: BasicUser = {
+      const newUser: PostUser = {
         email: 'newUser@gmail.com',
         password: 'Testing123!',
         username: 'newUser',
         organization: 'Example Corp.',
       };
 
-      const responseMock = new ServiceResponse<BasicUser>(
+      const responseMock = new ServiceResponse<PostUser>(
         ResponseStatus.Success,
         'User created.',
         newUser,
@@ -175,7 +181,7 @@ function compareUsers(mockUser: User, responseUser: User) {
     throw new Error('Invalid test data: mockUser or responseUser is undefined');
   }
 
-  expect(responseUser.id).toEqual(mockUser.id);
+  expect(responseUser._id.toString()).toEqual(mockUser._id.toString());
   expect(responseUser.username).toEqual(mockUser.username);
   expect(responseUser.email).toEqual(mockUser.email);
   expect(new Date(responseUser.createdAt)).toEqual(mockUser.createdAt);

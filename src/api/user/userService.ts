@@ -5,7 +5,8 @@ import jwt from 'jsonwebtoken';
 
 import { organizationRepository } from '@/api/organization/organizationRepository';
 import { userRepository } from '@/api/user/userRepository';
-import { BasicUser, User, UserAndDates, UserResponse } from '@/api/user/userSchema';
+import { User, UserResponse, UserWithDates } from '@/api/user/userSchema';
+import { PostUser } from '@/api/user/userValidation';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { env } from '@/common/utils/envConfig';
 import { logger } from '@/server';
@@ -40,7 +41,7 @@ export const userService = {
     }
   },
 
-  insertUser: async (user: BasicUser): Promise<ServiceResponse<UserResponse | null>> => {
+  insertUser: async (user: PostUser): Promise<ServiceResponse<UserResponse | null>> => {
     try {
       const existingUser = await userRepository.findByEmailAsync(user.email);
 
@@ -48,23 +49,23 @@ export const userService = {
         return new ServiceResponse(ResponseStatus.Failed, 'User already exists', null, StatusCodes.BAD_REQUEST);
       }
 
-      const newUser = await userRepository.insertUser({
-        ...user,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      const newOrg = await organizationRepository.insert({
-        name: user.organization,
-      });
-
-      const savedUser = {
-        id: newUser.id,
-        email: newUser.email,
-        username: newUser.username,
-        organization_id: newOrg.id,
-        createdAt: newUser.createdAt,
-        updatedAt: newUser.updatedAt,
-      };
+      const savedUser = await organizationRepository
+        .insert({
+          name: user.organization,
+        })
+        .then(async (org) => {
+          return await userRepository.insertUser({
+            username: user.username,
+            email: user.email,
+            password: user.password,
+            organization: org._id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+        })
+        .catch((err) => {
+          throw new Error(err.message);
+        });
 
       return new ServiceResponse<UserResponse>(ResponseStatus.Success, 'User created.', savedUser, StatusCodes.OK);
     } catch (err) {
@@ -87,7 +88,7 @@ export const userService = {
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      const newUser: UserAndDates = {
+      const newUser: UserWithDates = {
         email,
         username,
         organization,
@@ -98,7 +99,7 @@ export const userService = {
 
       const savedUser = await userRepository.insertUser(newUser);
 
-      const payload = { id: savedUser.id };
+      const payload = { id: savedUser._id };
       const { JWT_SECRET } = env;
       const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
 

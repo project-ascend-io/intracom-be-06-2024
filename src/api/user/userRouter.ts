@@ -2,7 +2,7 @@ import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import express, { Request, Response, Router } from 'express';
 import { z } from 'zod';
 
-import { UserComplete, UserResponseSchema, UserSchema } from '@/api/user/userSchema';
+import { UserCompleteSchema, UserResponseSchema, UserSchema } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
 import { GetUserSchema, PostUserSchema } from '@/api/user/userValidation';
 import { createApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
@@ -10,7 +10,7 @@ import { handleServiceResponse, validateRequest } from '@/common/utils/httpHandl
 
 export const userRegistry = new OpenAPIRegistry();
 
-userRegistry.register('User', UserComplete);
+userRegistry.register('User', UserCompleteSchema);
 
 export const userRouter: Router = (() => {
   const router = express.Router();
@@ -19,7 +19,7 @@ export const userRouter: Router = (() => {
     method: 'get',
     path: '/users',
     tags: ['User'],
-    responses: createApiResponse(z.array(UserComplete), 'Success'),
+    responses: createApiResponse(z.array(UserCompleteSchema), 'Success'),
   });
 
   router.get('/', async (_req: Request, res: Response) => {
@@ -32,7 +32,7 @@ export const userRouter: Router = (() => {
     path: '/users/{id}',
     tags: ['User'],
     request: { params: GetUserSchema.shape.params },
-    responses: createApiResponse(UserComplete, 'Success'),
+    responses: createApiResponse(UserCompleteSchema, 'Success'),
   });
 
   router.get('/:id', validateRequest(GetUserSchema), async (req: Request, res: Response) => {
@@ -62,7 +62,7 @@ export const userRouter: Router = (() => {
     method: 'post',
     path: '/signup',
     tags: ['User'],
-    responses: createApiResponse(UserComplete, 'Success'),
+    responses: createApiResponse(UserCompleteSchema, 'Success'),
     request: {
       params: UserSchema,
       body: createPostBodyParams(UserSchema),

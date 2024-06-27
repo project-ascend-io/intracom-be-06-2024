@@ -37,3 +37,5 @@ export const PostUserSchema = z.object({
       }
     }),
 });
+
+export type PostUser = z.infer<typeof PostUserSchema.shape.body>;
