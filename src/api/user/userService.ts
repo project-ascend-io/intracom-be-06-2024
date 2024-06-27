@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 
 import { organizationRepository } from '@/api/organization/organizationRepository';
 import { userRepository } from '@/api/user/userRepository';
-import { User, UserResponse, UserWithDates } from '@/api/user/userSchema';
+import { BasicUser, User, UserResponse } from '@/api/user/userSchema';
 import { PostUser } from '@/api/user/userValidation';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { env } from '@/common/utils/envConfig';
@@ -59,8 +59,6 @@ export const userService = {
             email: user.email,
             password: user.password,
             organization: org._id,
-            createdAt: new Date(),
-            updatedAt: new Date(),
           });
         })
         .catch((err) => {
@@ -88,13 +86,11 @@ export const userService = {
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      const newUser: UserWithDates = {
+      const newUser: BasicUser = {
         email,
         username,
         organization,
         password: hashedPassword,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       const savedUser = await userRepository.insertUser(newUser);
