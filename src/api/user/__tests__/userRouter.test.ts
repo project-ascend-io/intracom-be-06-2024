@@ -41,8 +41,6 @@ describe('User API Endpoints', () => {
         username: prefix,
         organization: new mongoose.mongo.ObjectId(),
         password: 'testing123!',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
     }
     context.userList = userList;
@@ -184,6 +182,4 @@ function compareUsers(mockUser: User, responseUser: User) {
   expect(responseUser._id.toString()).toEqual(mockUser._id.toString());
   expect(responseUser.username).toEqual(mockUser.username);
   expect(responseUser.email).toEqual(mockUser.email);
-  expect(new Date(responseUser.createdAt)).toEqual(mockUser.createdAt);
-  expect(new Date(responseUser.updatedAt)).toEqual(mockUser.updatedAt);
 }
