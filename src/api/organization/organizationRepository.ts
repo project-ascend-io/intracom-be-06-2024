@@ -12,8 +12,6 @@ export const organizationRepository = {
       await organizationRepository.startConnection();
       const newOrg = new OrganizationModel({
         name: org.name,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
       return await newOrg.save();
     } catch (err) {
