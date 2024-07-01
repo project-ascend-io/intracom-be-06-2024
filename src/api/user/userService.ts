@@ -69,7 +69,10 @@ export const userService = {
         _id: savedUser._id,
         username: savedUser.username,
         email: savedUser.email,
-        organization: savedUser.organization._id,
+        organization: {
+          _id: savedUser.organization._id,
+          name: savedUser.organization.name,
+        },
       };
 
       return new ServiceResponse<UserResponse>(ResponseStatus.Success, 'User created.', userResponse, StatusCodes.OK);

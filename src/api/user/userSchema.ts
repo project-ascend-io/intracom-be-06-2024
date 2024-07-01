@@ -19,7 +19,10 @@ export const UserResponseSchema = z
   .object({
     email: z.string().openapi({ example: 'johndoe@example.com' }),
     username: z.string().openapi({ example: 'johndoe' }),
-    organization: z.instanceof(ObjectId),
+    organization: z.object({
+      _id: z.string(),
+      name: z.string(),
+    }),
   })
   .merge(ModelID);
 

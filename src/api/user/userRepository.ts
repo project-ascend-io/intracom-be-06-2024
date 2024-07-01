@@ -38,11 +38,12 @@ export const userRepository = {
     }
   },
 
-  insertUser: async (user: BasicUser): Promise<User> => {
+  insertUser: async (user: BasicUser): Promise<any> => {
     try {
       await userRepository.startConnection();
       const newUser = new UserModel(user);
-      return await newUser.save();
+      await newUser.save();
+      return await UserModel.findById(newUser._id).populate('organization');
     } catch (err) {
       console.error('[Error] insertUser: ', err);
       throw err;
