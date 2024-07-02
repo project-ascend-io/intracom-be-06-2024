@@ -2,14 +2,15 @@ import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import express, { Request, Response, Router } from 'express';
 import { z } from 'zod';
 
-import { GetUserSchema, NewUserSchema, UserSchema } from '@/api/user/userModel';
+import { UserCompleteSchema, UserResponseSchema, UserSchema } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
+import { GetUserSchema, PostUserSchema } from '@/api/user/userValidation';
 import { createApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '@/common/utils/httpHandlers';
 
 export const userRegistry = new OpenAPIRegistry();
 
-userRegistry.register('User', UserSchema);
+userRegistry.register('User', UserCompleteSchema);
 
 export const userRouter: Router = (() => {
   const router = express.Router();
@@ -18,7 +19,7 @@ export const userRouter: Router = (() => {
     method: 'get',
     path: '/users',
     tags: ['User'],
-    responses: createApiResponse(z.array(UserSchema), 'Success'),
+    responses: createApiResponse(z.array(UserCompleteSchema), 'Success'),
   });
 
   router.get('/', async (_req: Request, res: Response) => {
@@ -31,11 +32,11 @@ export const userRouter: Router = (() => {
     path: '/users/{id}',
     tags: ['User'],
     request: { params: GetUserSchema.shape.params },
-    responses: createApiResponse(UserSchema, 'Success'),
+    responses: createApiResponse(UserCompleteSchema, 'Success'),
   });
 
   router.get('/:id', validateRequest(GetUserSchema), async (req: Request, res: Response) => {
-    const id = parseInt(req.params.id as string, 10);
+    const id = req.params.id as string;
     const serviceResponse = await userService.findById(id);
     handleServiceResponse(serviceResponse, res);
   });
@@ -44,22 +45,34 @@ export const userRouter: Router = (() => {
     method: 'post',
     path: '/users',
     tags: ['User'],
-    responses: createApiResponse(UserSchema, 'Success'),
+    responses: createApiResponse(UserResponseSchema, 'Success'),
     request: {
-      params: NewUserSchema,
-      body: createPostBodyParams(NewUserSchema),
+      body: createPostBodyParams(UserSchema),
     },
   });
 
-  router.post(
-    '/',
-    //validateRequest(NewUserSchema),
-    async (_req: Request, res: Response) => {
-      console.log('Async call');
-      const serviceResponse = await userService.insertUser(_req);
-      handleServiceResponse(serviceResponse, res);
-    }
-  );
+  router.post('/', validateRequest(PostUserSchema), async (_req: Request, res: Response) => {
+    console.log('Async call');
+    const user = PostUserSchema.shape.body.parse({ ..._req.body });
+    const serviceResponse = await userService.insertUser(user);
+    handleServiceResponse(serviceResponse, res);
+  });
+
+  userRegistry.registerPath({
+    method: 'post',
+    path: '/signup',
+    tags: ['User'],
+    responses: createApiResponse(UserCompleteSchema, 'Success'),
+    request: {
+      params: UserSchema,
+      body: createPostBodyParams(UserSchema),
+    },
+  });
+
+  router.post('/signup', async (_req: Request, res: Response) => {
+    const serviceResponse = await userService.signup(_req);
+    handleServiceResponse(serviceResponse, res);
+  });
 
   return router;
 })();

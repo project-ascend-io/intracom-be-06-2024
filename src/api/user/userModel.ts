@@ -1,37 +1,25 @@
-import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
-import mongoose, { Model, Schema } from 'mongoose';
-import { z } from 'zod';
+import bcrypt from 'bcryptjs';
+import mongoose, { Document, Model, Schema } from 'mongoose';
 
-import { commonValidations } from '@/common/utils/commonValidation';
+import { User } from '@/api/user/userSchema';
 
-extendZodWithOpenApi(z);
+const mongooseUserSchema = new Schema<User>(
+  {
+    email: { type: String, required: true, unique: true },
+    username: { type: String, required: true },
+    password: { type: String, required: true },
+    organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+  },
+  { timestamps: true }
+);
 
-export type User = z.infer<typeof UserSchema>;
-export const UserSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  email: z.string().email(),
-  age: z.number(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-});
-export const NewUserSchema = z.object({
-  name: z.string().openapi({ example: 'John' }),
-  email: z.string().openapi({ example: 'johndoe@example.com' }),
-  age: z.number().openapi({ example: 19 }),
-});
-
-// Input Validation for 'GET users/:id' endpoint
-export const GetUserSchema = z.object({
-  params: z.object({ id: commonValidations.id }),
-});
-
-const mongooseUserSchema = new Schema<User>({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  age: { type: Number, required: true },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
+mongooseUserSchema.pre<User & Document>('save', async function (next) {
+  if (!this.isModified('password')) {
+    return next();
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 export const UserModel: Model<User> = mongoose.model<User>('User', mongooseUserSchema);
