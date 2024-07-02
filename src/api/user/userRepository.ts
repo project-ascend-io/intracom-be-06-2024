@@ -1,5 +1,5 @@
 import { UserModel } from '@/api/user/userModel';
-import { BasicUser, User } from '@/api/user/userSchema';
+import { BasicUser, User, UserResponse } from '@/api/user/userSchema';
 
 import { mongoDatabase } from '../mongoDatabase';
 
@@ -38,12 +38,17 @@ export const userRepository = {
     }
   },
 
-  insertUser: async (user: BasicUser): Promise<any> => {
+  insertUser: async (user: BasicUser): Promise<UserResponse> => {
     try {
       await userRepository.startConnection();
       const newUser = new UserModel(user);
       await newUser.save();
-      return await UserModel.findById(newUser._id).populate('organization');
+      const foundUser = await UserModel.findById(newUser._id).populate('organization');
+
+      if (!foundUser) {
+        throw new Error('User not found.');
+      }
+      return foundUser;
     } catch (err) {
       console.error('[Error] insertUser: ', err);
       throw err;
