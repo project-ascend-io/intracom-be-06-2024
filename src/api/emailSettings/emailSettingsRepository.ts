@@ -1,7 +1,13 @@
-import { DeleteResult, UpdateResult } from 'mongodb';
+import { UpdateResult } from 'mongodb';
+
+import { sendEmail } from '@/common/utils/sendEmail';
 
 import { mongoDatabase } from '../mongoDatabase';
 import { EmailSettings, EmailSettingsModel } from './emailSettingsModel';
+
+interface TestEmailRequest {
+  email: string;
+}
 
 export const emailSettingsRepository = {
   startConnection: async () => {
@@ -13,12 +19,6 @@ export const emailSettingsRepository = {
     const mondodb = await emailSettingsRepository.startConnection();
     const EmailSettingsCollection = mondodb.model<EmailSettings>('EmailSettings');
     return await EmailSettingsCollection.find();
-  },
-
-  findByIdAsync: async (id: number): Promise<EmailSettings | null> => {
-    const mondodb = await emailSettingsRepository.startConnection();
-    const EmailSettingsCollection = mondodb.model<EmailSettings>('EmailSettings');
-    return await EmailSettingsCollection.findOne({ id: id });
   },
 
   insertEmailSettings: async (emailSettings: EmailSettings): Promise<EmailSettings> => {
@@ -35,26 +35,47 @@ export const emailSettingsRepository = {
     }
   },
 
-  deleteByEmailSettingsIdAsync: async (id: number): Promise<DeleteResult | null> => {
-    const mongodb = await emailSettingsRepository.startConnection();
-    const EmailSettingsCollection = mongodb.model<EmailSettings>('EmailSettings');
-    return await EmailSettingsCollection.deleteOne({ id: id });
-  },
-
-  patchEmailSettings: async (emailSettings: EmailSettings): Promise<UpdateResult<Document> | null> => {
+  updateEmailSettings: async (emailSettings: EmailSettings): Promise<UpdateResult<Document> | null> => {
     try {
       const mongodb = await emailSettingsRepository.startConnection();
       const EmailSettingsCollection = mongodb.model<EmailSettings>('EmailSettings');
 
       const updateData = { $set: emailSettings };
-      const savedEmailSettings = await EmailSettingsCollection.updateOne({ id: emailSettings.id }, updateData);
+      const savedEmailSettings = await EmailSettingsCollection.updateOne(
+        { username: emailSettings.username },
+        updateData
+      );
       if (savedEmailSettings.matchedCount === 0) {
-        console.log('No email settings found with the given id to update.');
+        console.log('No email settings found with the given username to update.');
         return null;
       }
       return savedEmailSettings;
     } catch (err) {
       console.error('Error updating email-settings: ', err);
+      throw err;
+    }
+  },
+
+  // Send test email using nodemailer
+  testEmailSettings: async (request: TestEmailRequest): Promise<boolean> => {
+    try {
+      const { email } = request;
+
+      if (!email) {
+        return false;
+      }
+
+      const options = {
+        to: email,
+        subject: 'Test',
+        message: 'This is a test email',
+      };
+
+      await sendEmail(options);
+
+      return true;
+    } catch (err) {
+      console.error('Error testing email-settings: ', err);
       throw err;
     }
   },
