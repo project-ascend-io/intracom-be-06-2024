@@ -1,6 +1,5 @@
 import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { DeleteResult } from 'mongodb';
 
 import { NewEmailSettingsSchema } from '@/api/emailSettings/emailSettingsModel';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
@@ -30,26 +29,6 @@ export const emailSettingsService = {
     }
   },
 
-  // Retrieves a single email settings by their id
-  findById: async (id: number): Promise<ServiceResponse<EmailSettings | null>> => {
-    try {
-      const emailSettings = await emailSettingsRepository.findByIdAsync(id);
-      if (!emailSettings) {
-        return new ServiceResponse(ResponseStatus.Failed, 'Email Settings not found', null, StatusCodes.NOT_FOUND);
-      }
-      return new ServiceResponse<EmailSettings>(
-        ResponseStatus.Success,
-        'Email Settings found',
-        emailSettings,
-        StatusCodes.OK
-      );
-    } catch (error) {
-      const errorMessage = `Error finding email settings with id ${id}:, ${(error as Error).message}`;
-      logger.error(errorMessage);
-      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
-    }
-  },
-
   // Inserts a new email settings into the database
   insertEmailSettings: async (request: Request): Promise<ServiceResponse<EmailSettings | null>> => {
     try {
@@ -70,29 +49,12 @@ export const emailSettingsService = {
     }
   },
 
-  // Deletes a single email settings by their id
-  deleteByEmailSettingsId: async (id: number): Promise<ServiceResponse<DeleteResult | null>> => {
-    try {
-      const emailSettings = await emailSettingsRepository.deleteByEmailSettingsIdAsync(id);
-      return new ServiceResponse<DeleteResult | null>(
-        ResponseStatus.Success,
-        'Email Settings deleted',
-        emailSettings,
-        StatusCodes.OK
-      );
-    } catch (error) {
-      const errorMessage = `Error finding email settings with id ${id}:, ${(error as Error).message}`;
-      logger.error(errorMessage);
-      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
-    }
-  },
-
   // Changes data on an email settings in the database
-  patchEmailSettings: async (request: Request): Promise<ServiceResponse<null>> => {
+  putEmailSettings: async (request: Request): Promise<ServiceResponse<null>> => {
     try {
       const emailSettings = NewEmailSettingsSchema.parse({ ...request.body });
 
-      const updateResult = await emailSettingsRepository.patchEmailSettings(emailSettings);
+      const updateResult = await emailSettingsRepository.updateEmailSettings(emailSettings);
 
       if (updateResult && updateResult.modifiedCount > 0) {
         return new ServiceResponse<null>(
@@ -111,6 +73,33 @@ export const emailSettingsService = {
       }
     } catch (error) {
       const errorMessage = `emailSettingsService - PatchEmailSettings - Error Message`;
+      logger.error(errorMessage);
+      return new ServiceResponse<null>(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  // Tests the email settings
+  testEmailSettings: async (request: Request): Promise<ServiceResponse<null>> => {
+    try {
+      const testResult = await emailSettingsRepository.testEmailSettings(request.body);
+
+      if (testResult) {
+        return new ServiceResponse<null>(
+          ResponseStatus.Success,
+          'Email Settings tested successfully.',
+          null,
+          StatusCodes.OK
+        );
+      } else {
+        return new ServiceResponse<null>(
+          ResponseStatus.Failed,
+          'Email Settings test failed.',
+          null,
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
+    } catch (error) {
+      const errorMessage = `emailSettingsService - TestEmailSettings - Error Message`;
       logger.error(errorMessage);
       return new ServiceResponse<null>(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
