@@ -8,7 +8,7 @@ import {
   NewEmailSettingsSchema,
 } from '@/api/emailSettings/emailSettingsModel';
 import { createApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
-import { handleServiceResponse, validateRequest } from '@/common/utils/httpHandlers';
+import { handleServiceResponse } from '@/common/utils/httpHandlers';
 
 import { emailSettingsService } from './emailSettingsService';
 
@@ -30,20 +30,6 @@ export const emailSettingsRouter: Router = (() => {
   });
 
   emailSettingsRegistry.registerPath({
-    method: 'get',
-    path: '/email-settings/{Id}',
-    tags: ['Email Settings'],
-    request: { params: GetEmailSettingsSchema.shape.params },
-    responses: createApiResponse(EmailSettingsSchema, 'Success'),
-  });
-
-  router.get('/:id', validateRequest(GetEmailSettingsSchema), async (req: Request, res: Response) => {
-    const id = parseInt(req.params.id as string, 10);
-    const serviceResponse = await emailSettingsService.findById(id);
-    handleServiceResponse(serviceResponse, res);
-  });
-
-  emailSettingsRegistry.registerPath({
     method: 'post',
     path: '/email-settings',
     tags: ['Email Settings'],
@@ -60,29 +46,28 @@ export const emailSettingsRouter: Router = (() => {
   });
 
   emailSettingsRegistry.registerPath({
-    method: 'delete',
-    path: '/email-settings/{Id}',
+    method: 'put',
+    path: '/email-settings',
     tags: ['Email Settings'],
     request: { params: GetEmailSettingsSchema.shape.params },
     responses: createApiResponse(EmailSettingsSchema, 'Success'),
   });
 
-  router.delete('/:id', validateRequest(GetEmailSettingsSchema), async (req: Request, res: Response) => {
-    const id = parseInt(req.params.id as string, 10);
-    const serviceResponse = await emailSettingsService.deleteByEmailSettingsId(id);
+  router.put('/', async (_req: Request, res: Response) => {
+    const serviceResponse = await emailSettingsService.putEmailSettings(_req);
     handleServiceResponse(serviceResponse, res);
   });
 
   emailSettingsRegistry.registerPath({
-    method: 'patch',
-    path: '/email-settings/{Id}',
+    method: 'post',
+    path: '/email-settings/test',
     tags: ['Email Settings'],
     request: { params: GetEmailSettingsSchema.shape.params },
     responses: createApiResponse(EmailSettingsSchema, 'Success'),
   });
 
-  router.patch('/', async (_req: Request, res: Response) => {
-    const serviceResponse = await emailSettingsService.patchEmailSettings(_req);
+  router.post('/test', async (_req: Request, res: Response) => {
+    const serviceResponse = await emailSettingsService.testEmailSettings(_req);
     handleServiceResponse(serviceResponse, res);
   });
 
