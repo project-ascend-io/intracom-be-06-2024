@@ -8,18 +8,18 @@ extendZodWithOpenApi(z);
 
 export type EmailSettings = z.infer<typeof EmailSettingsSchema>;
 export const EmailSettingsSchema = z.object({
-  id: z.number(),
   server: z.string(),
   port: z.number(),
   username: z.string(),
+  password: z.string(),
   securityType: z.string(),
 });
 
 export const NewEmailSettingsSchema = z.object({
-  id: z.number().openapi({ example: 2 }),
   server: z.string().openapi({ example: 'http://www.localhost.com' }),
   port: z.number().openapi({ example: 5432 }),
   username: z.string().openapi({ example: 'root' }),
+  password: z.string().openapi({ example: 'securepassword' }),
   securityType: z.string().openapi({ example: 'TLS' }),
 });
 
@@ -31,6 +31,7 @@ const mongooseEmailSettingsSchema = new Schema<EmailSettings>({
   server: { type: String, required: true },
   port: { type: Number, required: true },
   username: { type: String, required: true },
+  password: { type: String, required: true },
   securityType: { type: String, required: true },
 });
 
