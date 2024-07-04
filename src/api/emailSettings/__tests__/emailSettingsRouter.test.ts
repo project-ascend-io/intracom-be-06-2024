@@ -8,10 +8,10 @@ import { emailSettingsService } from '../emailSettingsService';
 describe('userProfileRouter', () => {
   const mockEmailSettings: EmailSettings[] = [
     {
-      id: 1,
       server: 'localhost:8080',
       port: 5432,
       username: 'root',
+      password: 'securepassword',
       securityType: 'TLS',
     },
   ];
