@@ -1,9 +1,14 @@
+import bcrypt from 'bcryptjs';
 import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import jwt from 'jsonwebtoken';
 
-import { NewUserSchema, User } from '@/api/user/userModel';
+import { organizationRepository } from '@/api/organization/organizationRepository';
 import { userRepository } from '@/api/user/userRepository';
+import { BasicUser, User, UserResponse } from '@/api/user/userSchema';
+import { PostUser } from '@/api/user/userValidation';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
+import { env } from '@/common/utils/envConfig';
 import { logger } from '@/server';
 
 export const userService = {
@@ -22,8 +27,7 @@ export const userService = {
     }
   },
 
-  // Retrieves a single user by their ID
-  findById: async (id: number): Promise<ServiceResponse<User | null>> => {
+  findById: async (id: string): Promise<ServiceResponse<User | null>> => {
     try {
       const user = await userRepository.findByIdAsync(id);
       if (!user) {
@@ -37,18 +41,77 @@ export const userService = {
     }
   },
 
-  insertUser: async (request: Request): Promise<ServiceResponse<User | null>> => {
+  insertUser: async (user: PostUser): Promise<ServiceResponse<UserResponse | null>> => {
     try {
-      console.log('Body: ', request.body);
-      console.log('Params: ', request.params);
-      const user = NewUserSchema.parse({ ...request.body });
-      console.log('New User Schema', user);
+      const existingUser = await userRepository.findByEmailAsync(user.email);
 
-      const newUser = await userRepository.insertUser(user);
+      if (existingUser) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User already exists', null, StatusCodes.BAD_REQUEST);
+      }
 
-      return new ServiceResponse<User>(ResponseStatus.Success, 'User created.', newUser, StatusCodes.OK);
+      const savedUser = await organizationRepository
+        .insert({
+          name: user.organization,
+        })
+        .then(async (org) => {
+          return await userRepository.insertUser({
+            username: user.username,
+            email: user.email,
+            password: user.password,
+            organization: org._id,
+          });
+        })
+        .catch((err) => {
+          throw new Error(err.message);
+        });
+
+      const userResponse: UserResponse = {
+        _id: savedUser._id,
+        username: savedUser.username,
+        email: savedUser.email,
+        organization: {
+          _id: savedUser.organization._id,
+          name: savedUser.organization.name,
+        },
+      };
+
+      return new ServiceResponse<UserResponse>(ResponseStatus.Success, 'User created.', userResponse, StatusCodes.OK);
     } catch (err) {
-      const errorMessage = `userService - InsertUser - Error Message`;
+      console.log(err);
+      const errorMessage = `Error creating new user: , ${(err as Error).message}`;
+      //const errorMessage = `[Error] userService - InsertUser: `;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  signup: async (request: Request): Promise<ServiceResponse<string | null>> => {
+    try {
+      const { email, username, password, organization } = request.body;
+
+      const existingUser = await userRepository.findByEmailAsync(email);
+      if (existingUser) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User already exists', null, StatusCodes.BAD_REQUEST);
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const newUser: BasicUser = {
+        email,
+        username,
+        organization,
+        password: hashedPassword,
+      };
+
+      const savedUser = await userRepository.insertUser(newUser);
+
+      const payload = { id: savedUser._id };
+      const { JWT_SECRET } = env;
+      const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+
+      return new ServiceResponse<string>(ResponseStatus.Success, 'User created.', token, StatusCodes.OK);
+    } catch (err) {
+      const errorMessage = `userService - Signup - Error Message: ${err}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
