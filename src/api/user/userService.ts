@@ -77,7 +77,12 @@ export const userService = {
         role: user.role,
       };
 
-      return new ServiceResponse<UserResponse>(ResponseStatus.Success, 'User created.', userResponse, StatusCodes.OK);
+      return new ServiceResponse<UserResponse>(
+        ResponseStatus.Success,
+        'User created.',
+        userResponse,
+        StatusCodes.CREATED
+      );
     } catch (err) {
       console.log(err);
       const errorMessage = `Error creating new user: , ${(err as Error).message}`;
