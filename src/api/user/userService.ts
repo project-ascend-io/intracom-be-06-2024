@@ -59,6 +59,7 @@ export const userService = {
             email: user.email,
             password: user.password,
             organization: org._id,
+            role: user.role,
           });
         })
         .catch((err) => {
@@ -73,6 +74,7 @@ export const userService = {
           _id: savedUser.organization._id,
           name: savedUser.organization.name,
         },
+        role: user.role,
       };
 
       return new ServiceResponse<UserResponse>(ResponseStatus.Success, 'User created.', userResponse, StatusCodes.OK);
@@ -87,7 +89,7 @@ export const userService = {
 
   signup: async (request: Request): Promise<ServiceResponse<string | null>> => {
     try {
-      const { email, username, password, organization } = request.body;
+      const { email, username, password, organization, role } = request.body;
 
       const existingUser = await userRepository.findByEmailAsync(email);
       if (existingUser) {
@@ -101,6 +103,7 @@ export const userService = {
         username,
         organization,
         password: hashedPassword,
+        role,
       };
 
       const savedUser = await userRepository.insertUser(newUser);

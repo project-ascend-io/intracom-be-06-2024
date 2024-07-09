@@ -1,6 +1,8 @@
 import { ObjectId } from 'mongodb';
 import { z } from 'zod';
 
+import { userRolesArray } from '../../api/user/userSchema';
+
 export const commonValidations = {
   id: z
     .string()
@@ -9,4 +11,5 @@ export const commonValidations = {
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   organization: z.string().min(1, "Please enter your organization's name"),
   password: z.string().min(8, 'Password must contain at least 8 characters'),
+  role: z.enum(userRolesArray, { message: 'Role type should be one of the following: User, Admin' }),
 };

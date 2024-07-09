@@ -41,6 +41,7 @@ describe('User API Endpoints', () => {
         username: prefix,
         organization: new mongoose.mongo.ObjectId(),
         password: 'testing123!',
+        role: 'Admin',
       });
     }
     context.userList = userList;
@@ -137,11 +138,28 @@ describe('User API Endpoints', () => {
         password: 'testing',
         username: 'newUser',
         organization: 'Example Corp.',
+        role: 'User',
       };
       // Assert
       const response = await request(app).post(`/users`).send(newUser).set('Accept', 'application/json');
 
       expect(response.statusCode).toEqual(StatusCodes.BAD_REQUEST);
+    });
+
+    it('should return invalid enum value for the role', async () => {
+      const newUser: PostUser = {
+        email: 'newUser@gmail.com',
+        password: 'Testing123!',
+        username: 'newUser',
+        organization: 'Example Corp.',
+        role: 'Developer',
+      };
+
+      const response = await request(app).post(`/users`).send(newUser).set('Accept', 'application/json');
+
+      expect(response.statusCode).toEqual(StatusCodes.BAD_REQUEST);
+      const responseBody: ServiceResponse<BasicUser> = response.body;
+      expect(responseBody.message).toContain('Invalid input: Role Invalid enum value');
     });
     it('should return the newly created user', async () => {
       // Act
@@ -150,6 +168,7 @@ describe('User API Endpoints', () => {
         password: 'Testing123!',
         username: 'newUser',
         organization: 'Example Corp.',
+        role: 'User',
       };
 
       const responseMock = new ServiceResponse<PostUser>(
