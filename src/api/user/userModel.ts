@@ -22,8 +22,4 @@ mongooseUserSchema.pre<User & Document>('save', async function (next) {
   next();
 });
 
-const helloWorld = () => {
-  console.log('Hello World');
-};
-helloWorld();
 export const UserModel: Model<User> = mongoose.model<User>('User', mongooseUserSchema);
