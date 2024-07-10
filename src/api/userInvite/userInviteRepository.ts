@@ -13,7 +13,7 @@ export const userInviteRepository = {
       await userInviteRepository.startConnection();
       return await UserInviteModel.find();
     } catch (err) {
-      console.error('[Error] userInviteReposiroty - findAllAsync: ', err);
+      console.error('[Error] userInviteRepository - findAllAsync: ', err);
       throw err;
     }
   },
@@ -23,7 +23,17 @@ export const userInviteRepository = {
       await userInviteRepository.startConnection();
       return await UserInviteModel.findById(id);
     } catch (err) {
-      console.error('[Error] userInviteReposiroty - findByIdAsync: ', err);
+      console.error('[Error] userInviteRepository - findByIdAsync: ', err);
+      throw err;
+    }
+  },
+
+  findByEmailAsync: async (email: string): Promise<UserInvite | null> => {
+    try {
+      await userInviteRepository.startConnection();
+      return await UserInviteModel.findOne({ email });
+    } catch (err) {
+      console.error('[Error] findByEmailAsync: ', err);
       throw err;
     }
   },
@@ -34,7 +44,7 @@ export const userInviteRepository = {
       const savedInvite = new UserInviteModel(userInvite);
       return await savedInvite.save();
     } catch (err) {
-      console.error('[Error] userInviteReposiroty - insert: ', err);
+      console.error('[Error] userInviteRepository - insert: ', err);
       throw err;
     }
   },
