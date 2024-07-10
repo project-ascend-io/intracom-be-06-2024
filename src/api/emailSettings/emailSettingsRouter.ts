@@ -1,16 +1,11 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import express, { Request, Response, Router } from 'express';
-import { z } from 'zod';
 
-import {
-  EmailSettingsSchema,
-  GetEmailSettingsSchema,
-  NewEmailSettingsSchema,
-} from '@/api/emailSettings/emailSettingsModel';
+import { EmailSettingsSchema } from '@/api/emailSettings/emailSettingsSchema';
+import { emailSettingsService } from '@/api/emailSettings/emailSettingsService';
+import { GetEmailSettingsSchema } from '@/api/emailSettings/emailSettingsValidation';
 import { createApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
 import { handleServiceResponse } from '@/common/utils/httpHandlers';
-
-import { emailSettingsService } from './emailSettingsService';
 
 export const emailSettingsRegistry = new OpenAPIRegistry();
 
@@ -19,13 +14,15 @@ export const emailSettingsRouter: Router = (() => {
 
   emailSettingsRegistry.registerPath({
     method: 'get',
-    path: '/email-settings',
+    path: 'organizations/{id}/email-settings',
     tags: ['Email Settings'],
-    responses: createApiResponse(z.array(EmailSettingsSchema), 'Success'),
+    request: { params: GetEmailSettingsSchema.shape.params },
+    responses: createApiResponse(EmailSettingsSchema, 'Success'),
   });
 
-  router.get('/email-settings', async (_req: Request, res: Response) => {
-    const serviceResponse = await emailSettingsService.findAll();
+  router.get('/organizations/:id/email-settings', async (_req: Request, res: Response) => {
+    const id = _req.params.id as string;
+    const serviceResponse = await emailSettingsService.findById(id);
     handleServiceResponse(serviceResponse, res);
   });
 
@@ -35,8 +32,8 @@ export const emailSettingsRouter: Router = (() => {
     tags: ['Email Settings'],
     responses: createApiResponse(EmailSettingsSchema, 'Success'),
     request: {
-      params: NewEmailSettingsSchema,
-      body: createPostBodyParams(NewEmailSettingsSchema),
+      params: EmailSettingsSchema,
+      body: createPostBodyParams(EmailSettingsSchema),
     },
   });
 
