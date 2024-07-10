@@ -53,11 +53,11 @@ export const emailSettingsService = {
   },
 
   // Changes data on an email settings in the database
-  putEmailSettings: async (request: Request): Promise<ServiceResponse<null>> => {
+  putEmailSettings: async (id: string, request: Request): Promise<ServiceResponse<null>> => {
     try {
       const emailSettings = EmailSettingsSchema.parse({ ...request.body });
 
-      const updateResult = await emailSettingsRepository.updateEmailSettings(emailSettings);
+      const updateResult = await emailSettingsRepository.updateEmailSettings(id, emailSettings);
 
       if (updateResult && updateResult.modifiedCount > 0) {
         return new ServiceResponse<null>(
