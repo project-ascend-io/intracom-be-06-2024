@@ -1,10 +1,9 @@
 import { StatusCodes } from 'http-status-codes';
 
+import { emailSettingsRepository } from '@/api/emailSettings/emailSettingsRepository';
+import { EmailSettings } from '@/api/emailSettings/emailSettingsSchema';
+import { emailSettingsService } from '@/api/emailSettings/emailSettingsService';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
-
-import { EmailSettings } from '../emailSettingsModel';
-import { emailSettingsRepository } from '../emailSettingsRepository';
-import { emailSettingsService } from '../emailSettingsService';
 
 vi.mock('@/api/userProfile/userProfileRepository');
 vi.mock('@/server', () => ({
@@ -15,30 +14,21 @@ vi.mock('@/server', () => ({
 }));
 
 describe('emailSettingsService', () => {
-  const mockEmailSettings: EmailSettings[] = [
-    {
-      server: 'localhost:8080',
-      port: 5432,
-      username: 'root',
-      password: 'securepassword',
-      securityType: 'TLS',
-    },
-    {
-      server: 'localhost:3032',
-      port: 5498,
-      username: 'root',
-      password: 'securepassword',
-      securityType: 'TLS',
-    },
-  ];
+  const mockEmailSettings: EmailSettings = {
+    server: 'localhost:8080',
+    port: 5432,
+    username: 'root',
+    password: 'securepassword',
+    securityType: 'TLS',
+  };
 
-  describe('findAll', () => {
-    it('return all email-settings', async () => {
+  describe('findById', () => {
+    it('return email-settings with given id', async () => {
       // Arrange
-      vi.spyOn(emailSettingsRepository, 'findAllAsync').mockReturnValue(Promise.resolve(mockEmailSettings));
+      vi.spyOn(emailSettingsRepository, 'findByIdAsync').mockReturnValue(Promise.resolve(mockEmailSettings));
 
       // Act
-      const result = await emailSettingsService.findAll();
+      const result = await emailSettingsService.findById('0');
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.OK);
@@ -49,14 +39,18 @@ describe('emailSettingsService', () => {
 
     it('returns a not found error for no email settings found', async () => {
       // Arrange
-      vi.spyOn(emailSettingsService, 'findAll').mockResolvedValue(
-        new ServiceResponse<
-          { server: string; port: number; username: string; password: string; securityType: string }[] | null
-        >(ResponseStatus.Failed, 'No Email Settings found', null, StatusCodes.NOT_FOUND)
+      vi.spyOn(emailSettingsService, 'findById').mockResolvedValue(
+        new ServiceResponse<{
+          server: string;
+          port: number;
+          username: string;
+          password: string;
+          securityType: string;
+        } | null>(ResponseStatus.Failed, 'No Email Settings found', null, StatusCodes.NOT_FOUND)
       );
 
       // Act
-      const result = await emailSettingsService.findAll();
+      const result = await emailSettingsService.findById('0');
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.NOT_FOUND);
@@ -65,16 +59,20 @@ describe('emailSettingsService', () => {
       expect(result.responseObject).toBeNull();
     });
 
-    it('handles errors for findAllAsync', async () => {
+    it('handles errors for findById', async () => {
       // Arrange
-      vi.spyOn(emailSettingsService, 'findAll').mockResolvedValue(
-        new ServiceResponse<
-          { server: string; port: number; username: string; password: string; securityType: string }[] | null
-        >(ResponseStatus.Failed, 'No Email Settings found', null, StatusCodes.INTERNAL_SERVER_ERROR)
+      vi.spyOn(emailSettingsService, 'findById').mockResolvedValue(
+        new ServiceResponse<{
+          server: string;
+          port: number;
+          username: string;
+          password: string;
+          securityType: string;
+        } | null>(ResponseStatus.Failed, 'No Email Settings found', null, StatusCodes.INTERNAL_SERVER_ERROR)
       );
 
       // Act
-      const result = await emailSettingsService.findAll();
+      const result = await emailSettingsService.findById('231232141');
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.INTERNAL_SERVER_ERROR);

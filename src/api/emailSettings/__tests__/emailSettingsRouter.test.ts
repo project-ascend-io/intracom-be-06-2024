@@ -1,46 +1,43 @@
 import { StatusCodes } from 'http-status-codes';
 
+import { EmailSettings } from '@/api/emailSettings/emailSettingsSchema';
+import { emailSettingsService } from '@/api/emailSettings/emailSettingsService';
 import { ServiceResponse } from '@/common/models/serviceResponse';
 
-import { EmailSettings } from '../emailSettingsModel';
-import { emailSettingsService } from '../emailSettingsService';
+describe('emailSettingsRouter', () => {
+  const mockEmailSettings: EmailSettings = {
+    server: 'localhost:8080',
+    port: 5432,
+    username: 'root',
+    password: 'securepassword',
+    securityType: 'TLS',
+  };
 
-describe('userProfileRouter', () => {
-  const mockEmailSettings: EmailSettings[] = [
-    {
-      server: 'localhost:8080',
-      port: 5432,
-      username: 'root',
-      password: 'securepassword',
-      securityType: 'TLS',
-    },
-  ];
-
-  const mockEmailSettingsResponse: ServiceResponse<EmailSettings[]> = {
+  const mockEmailSettingsResponse: ServiceResponse<EmailSettings> = {
     success: true,
     message: 'Email Settings found',
     responseObject: mockEmailSettings,
     statusCode: StatusCodes.OK,
   };
 
-  const mockEmailSettingsError: ServiceResponse<EmailSettings[]> = {
+  const mockEmailSettingsError: ServiceResponse<EmailSettings | null> = {
     success: false,
     message: 'No Email Settings found',
-    responseObject: [],
+    responseObject: null,
     statusCode: StatusCodes.NOT_FOUND,
   };
 
-  describe('findAll', () => {
-    it('return all email settings', async () => {
+  describe('findById', () => {
+    it('return email settings for the organization', async () => {
       // Arrange
-      const findAllMock = vi.spyOn(emailSettingsService, 'findAll');
-      if (!findAllMock) {
-        throw new Error('EmailSettingsService.findAll is not defined');
+      const findByIdMock = vi.spyOn(emailSettingsService, 'findById');
+      if (!findByIdMock) {
+        throw new Error('EmailSettingsService.findById is not defined');
       }
-      findAllMock.mockResolvedValue(mockEmailSettingsResponse);
+      findByIdMock.mockResolvedValue(mockEmailSettingsResponse);
 
       // Act
-      const result = await emailSettingsService.findAll();
+      const result = await emailSettingsService.findById('0');
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.OK);
@@ -49,28 +46,28 @@ describe('userProfileRouter', () => {
       expect(result.responseObject).toEqual(mockEmailSettings);
 
       // Clean up
-      findAllMock.mockRestore();
+      findByIdMock.mockRestore();
     });
 
     it('returns a not found error for no email settings found', async () => {
       // Arrange
-      const findAllMock = vi.spyOn(emailSettingsService, 'findAll');
-      if (!findAllMock) {
-        throw new Error('EmailSettingsService.findAll is not defined');
+      const findByIdMock = vi.spyOn(emailSettingsService, 'findById');
+      if (!findByIdMock) {
+        throw new Error('EmailSettingsService.findById is not defined');
       }
-      findAllMock.mockResolvedValue(mockEmailSettingsError);
+      findByIdMock.mockResolvedValue(mockEmailSettingsError);
 
       // Act
-      const result = await emailSettingsService.findAll();
+      const result = await emailSettingsService.findById('0');
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.NOT_FOUND);
       expect(result.success).toBeFalsy();
       expect(result.message).toContain('No Email Settings found');
-      expect(result.responseObject).toEqual([]);
+      expect(result.responseObject).toBeNull();
 
       // Clean up
-      findAllMock.mockRestore();
+      findByIdMock.mockRestore();
     });
   });
 });
