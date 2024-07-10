@@ -13,5 +13,6 @@ export const env = cleanEnv(process.env, {
   CORS_ORIGIN: str({ devDefault: testOnly('http://localhost:3000') }),
   COMMON_RATE_LIMIT_MAX_REQUESTS: num({ devDefault: testOnly(1000) }),
   COMMON_RATE_LIMIT_WINDOW_MS: num({ devDefault: testOnly(1000) }),
-  MONGODB_CONNECTION_STRING: str({ devDefault: testOnly('mongodb://localhost:27017') }),
+  MONGODB_CONNECTION_STRING: str({ devDefault: testOnly('mongodb://root:root@localhost:27017') }),
+  JWT_SECRET: str({ devDefault: testOnly('RANDOM_KEY') }),
 });

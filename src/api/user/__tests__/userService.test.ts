@@ -1,8 +1,8 @@
 import { StatusCodes } from 'http-status-codes';
-import { Mock } from 'vitest';
+import { describe, expect, it, Mock, vi } from 'vitest';
 
-import { User } from '@/api/user/userModel';
 import { userRepository } from '@/api/user/userRepository';
+import { User } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
 
 vi.mock('@/api/user/userRepository');
@@ -15,8 +15,24 @@ vi.mock('@/server', () => ({
 
 describe('userService', () => {
   const mockUsers: User[] = [
-    { id: 1, name: 'Alice', email: 'alice@example.com', age: 42, createdAt: new Date(), updatedAt: new Date() },
-    { id: 2, name: 'Bob', email: 'bob@example.com', age: 21, createdAt: new Date(), updatedAt: new Date() },
+    {
+      id: '1',
+      username: 'Alice',
+      email: 'alice@example.com',
+      organization: 'Example Corp.',
+      password: 'Testing123!',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: '2',
+      username: 'Bob',
+      email: 'bob@example.com',
+      organization: 'Example Corp.',
+      password: 'Testing123!',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
   ];
 
   describe('findAll', () => {
@@ -66,7 +82,7 @@ describe('userService', () => {
   describe('findById', () => {
     it('returns a user for a valid ID', async () => {
       // Arrange
-      const testId = 1;
+      const testId = '1';
       const mockUser = mockUsers.find((user) => user.id === testId);
       (userRepository.findByIdAsync as Mock).mockReturnValue(mockUser);
 
@@ -82,7 +98,7 @@ describe('userService', () => {
 
     it('handles errors for findByIdAsync', async () => {
       // Arrange
-      const testId = 1;
+      const testId = '1';
       (userRepository.findByIdAsync as Mock).mockRejectedValue(new Error('Database error'));
 
       // Act
@@ -97,7 +113,7 @@ describe('userService', () => {
 
     it('returns a not found error for non-existent ID', async () => {
       // Arrange
-      const testId = 1;
+      const testId = '1';
       (userRepository.findByIdAsync as Mock).mockReturnValue(null);
 
       // Act
