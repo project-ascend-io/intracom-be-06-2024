@@ -1,13 +1,10 @@
 import { UpdateResult } from 'mongodb';
 
+import { EmailSettingsModel } from '@/api/emailSettings/emailSettingsModel';
+import { EmailSettings, EmailSettingsTest } from '@/api/emailSettings/emailSettingsSchema';
 import { sendEmail } from '@/common/utils/sendEmail';
 
 import { mongoDatabase } from '../mongoDatabase';
-import { EmailSettings, EmailSettingsModel } from './emailSettingsModel';
-
-interface TestEmailRequest {
-  email: string;
-}
 
 export const emailSettingsRepository = {
   startConnection: async () => {
@@ -15,10 +12,16 @@ export const emailSettingsRepository = {
     return mongoDb;
   },
 
-  findAllAsync: async (): Promise<EmailSettings[]> => {
-    const mondodb = await emailSettingsRepository.startConnection();
-    const EmailSettingsCollection = mondodb.model<EmailSettings>('EmailSettings');
-    return await EmailSettingsCollection.find();
+  findByIdAsync: async (id: string): Promise<EmailSettings | null> => {
+    try {
+      const mongodb = await emailSettingsRepository.startConnection();
+      const EmailSettingsCollection = mongodb.model<EmailSettings>('EmailSettings');
+      const emailSettings = await EmailSettingsCollection.findOne({ _id: id });
+      return emailSettings;
+    } catch (err) {
+      console.error('Error finding email-settings by id: ', err);
+      throw err;
+    }
   },
 
   insertEmailSettings: async (emailSettings: EmailSettings): Promise<EmailSettings> => {
@@ -57,15 +60,19 @@ export const emailSettingsRepository = {
   },
 
   // Send test email using nodemailer
-  testEmailSettings: async (request: TestEmailRequest): Promise<boolean> => {
+  testEmailSettings: async (request: EmailSettingsTest): Promise<boolean> => {
     try {
-      const { email } = request;
+      const { server, port, username, password, email } = request;
 
       if (!email) {
         return false;
       }
 
       const options = {
+        server: server,
+        port: port,
+        username: username,
+        password: password,
         to: email,
         subject: 'Test',
         message: 'This is a test email',
