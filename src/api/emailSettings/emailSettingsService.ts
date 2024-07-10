@@ -1,22 +1,25 @@
 import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
-import { NewEmailSettingsSchema } from '@/api/emailSettings/emailSettingsModel';
+import { emailSettingsRepository } from '@/api/emailSettings/emailSettingsRepository';
+import { EmailSettings, EmailSettingsSchema, EmailSettingsTestSchema } from '@/api/emailSettings/emailSettingsSchema';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { logger } from '@/server';
 
-import { EmailSettings } from './emailSettingsModel';
-import { emailSettingsRepository } from './emailSettingsRepository';
-
 export const emailSettingsService = {
   // Retrieves all email settings from the database
-  findAll: async (): Promise<ServiceResponse<EmailSettings[] | null>> => {
+  findById: async (id: string): Promise<ServiceResponse<EmailSettings | null>> => {
     try {
-      const emailSettings = await emailSettingsRepository.findAllAsync();
+      const emailSettings = await emailSettingsRepository.findByIdAsync(id);
       if (!emailSettings) {
-        return new ServiceResponse(ResponseStatus.Failed, 'No Email Settings found', null, StatusCodes.NOT_FOUND);
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          `No Email Settings found with Id ${id}`,
+          null,
+          StatusCodes.NOT_FOUND
+        );
       }
-      return new ServiceResponse<EmailSettings[]>(
+      return new ServiceResponse<EmailSettings>(
         ResponseStatus.Success,
         'Email Settings found',
         emailSettings,
@@ -32,7 +35,7 @@ export const emailSettingsService = {
   // Inserts a new email settings into the database
   insertEmailSettings: async (request: Request): Promise<ServiceResponse<EmailSettings | null>> => {
     try {
-      const emailSettings = NewEmailSettingsSchema.parse({ ...request.body });
+      const emailSettings = EmailSettingsSchema.parse({ ...request.body });
 
       const newEmailSettings = await emailSettingsRepository.insertEmailSettings(emailSettings);
 
@@ -52,7 +55,7 @@ export const emailSettingsService = {
   // Changes data on an email settings in the database
   putEmailSettings: async (request: Request): Promise<ServiceResponse<null>> => {
     try {
-      const emailSettings = NewEmailSettingsSchema.parse({ ...request.body });
+      const emailSettings = EmailSettingsSchema.parse({ ...request.body });
 
       const updateResult = await emailSettingsRepository.updateEmailSettings(emailSettings);
 
@@ -81,7 +84,9 @@ export const emailSettingsService = {
   // Tests the email settings
   testEmailSettings: async (request: Request): Promise<ServiceResponse<null>> => {
     try {
-      const testResult = await emailSettingsRepository.testEmailSettings(request.body);
+      const emailTestSettings = EmailSettingsTestSchema.parse({ ...request.body });
+
+      const testResult = await emailSettingsRepository.testEmailSettings(emailTestSettings);
 
       if (testResult) {
         return new ServiceResponse<null>(
