@@ -15,6 +15,7 @@ vi.mock('@/server', () => ({
 
 describe('emailSettingsService', () => {
   const mockEmailSettings: EmailSettings = {
+    _id: '847634920483974',
     server: 'localhost:8080',
     port: 5432,
     username: 'root',
@@ -41,6 +42,7 @@ describe('emailSettingsService', () => {
       // Arrange
       vi.spyOn(emailSettingsService, 'findById').mockResolvedValue(
         new ServiceResponse<{
+          _id: string;
           server: string;
           port: number;
           username: string;
@@ -63,6 +65,7 @@ describe('emailSettingsService', () => {
       // Arrange
       vi.spyOn(emailSettingsService, 'findById').mockResolvedValue(
         new ServiceResponse<{
+          _id: string;
           server: string;
           port: number;
           username: string;

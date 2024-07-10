@@ -6,6 +6,7 @@ import { ServiceResponse } from '@/common/models/serviceResponse';
 
 describe('emailSettingsRouter', () => {
   const mockEmailSettings: EmailSettings = {
+    _id: '948466483938',
     server: 'localhost:8080',
     port: 5432,
     username: 'root',
