@@ -2,9 +2,8 @@ import { UpdateResult } from 'mongodb';
 
 import { EmailSettingsModel } from '@/api/emailSettings/emailSettingsModel';
 import { EmailSettings, EmailSettingsTest } from '@/api/emailSettings/emailSettingsSchema';
+import { mongoDatabase } from '@/api/mongoDatabase';
 import { sendEmail } from '@/common/utils/sendEmail';
-
-import { mongoDatabase } from '../mongoDatabase';
 
 export const emailSettingsRepository = {
   startConnection: async () => {
