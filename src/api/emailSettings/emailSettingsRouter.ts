@@ -14,13 +14,13 @@ export const emailSettingsRouter: Router = (() => {
 
   emailSettingsRegistry.registerPath({
     method: 'get',
-    path: 'organizations/{id}/email-settings',
+    path: '/email-settings/organizations/{id}',
     tags: ['Email Settings'],
     request: { params: GetEmailSettingsSchema.shape.params },
     responses: createApiResponse(EmailSettingsSchema, 'Success'),
   });
 
-  router.get('/organizations/:id/email-settings', async (_req: Request, res: Response) => {
+  router.get('/organizations/:id', async (_req: Request, res: Response) => {
     const id = _req.params.id as string;
     const serviceResponse = await emailSettingsService.findById(id);
     handleServiceResponse(serviceResponse, res);
@@ -50,8 +50,9 @@ export const emailSettingsRouter: Router = (() => {
     responses: createApiResponse(EmailSettingsSchema, 'Success'),
   });
 
-  router.put('/', async (_req: Request, res: Response) => {
-    const serviceResponse = await emailSettingsService.putEmailSettings(_req);
+  router.put('/:id', async (_req: Request, res: Response) => {
+    const id = _req.params.id as string;
+    const serviceResponse = await emailSettingsService.putEmailSettings(id, _req);
     handleServiceResponse(serviceResponse, res);
   });
 
