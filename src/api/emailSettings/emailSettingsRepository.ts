@@ -37,16 +37,13 @@ export const emailSettingsRepository = {
     }
   },
 
-  updateEmailSettings: async (emailSettings: EmailSettings): Promise<UpdateResult<Document> | null> => {
+  updateEmailSettings: async (id: string, emailSettings: EmailSettings): Promise<UpdateResult<Document> | null> => {
     try {
       const mongodb = await emailSettingsRepository.startConnection();
       const EmailSettingsCollection = mongodb.model<EmailSettings>('EmailSettings');
 
       const updateData = { $set: emailSettings };
-      const savedEmailSettings = await EmailSettingsCollection.updateOne(
-        { username: emailSettings.username },
-        updateData
-      );
+      const savedEmailSettings = await EmailSettingsCollection.updateOne({ _id: id }, updateData);
       if (savedEmailSettings.matchedCount === 0) {
         console.log('No email settings found with the given username to update.');
         return null;
