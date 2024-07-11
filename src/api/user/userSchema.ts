@@ -15,7 +15,7 @@ export const userRolesArray = Object.values(userRoles) as [string, ...string[]];
 export const UserSchema = z.object({
   email: z.string().openapi({ example: 'johndoe@example.com' }),
   username: z.string().openapi({ example: 'johndoe' }),
-  password: z.string().openapi({ example: 'password' }),
+  password: z.string().openapi({ example: 'password2!P' }),
   organization: z.instanceof(ObjectId),
   role: z.enum(userRolesArray).openapi({ example: userRoles.Admin }),
 });

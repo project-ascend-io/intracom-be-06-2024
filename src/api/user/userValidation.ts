@@ -15,7 +15,7 @@ export const PostUserSchema = z.object({
       username: z.string().min(5),
       organization: commonValidations.organization,
       password: commonValidations.password,
-      role: z.enum(userRolesArray),
+      role: z.enum(userRolesArray).optional(),
     })
     .superRefine(({ password }, checkPassComplexity) => {
       const containsUppercase = (ch: string) => /[A-Z]/.test(ch);

@@ -11,6 +11,8 @@ import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse
 import { env } from '@/common/utils/envConfig';
 import { logger } from '@/server';
 
+import { userRoles } from './userModel';
+
 export const userService = {
   // Retrieves all users from the database
   findAll: async (): Promise<ServiceResponse<User[] | null>> => {
@@ -59,7 +61,7 @@ export const userService = {
             email: user.email,
             password: user.password,
             organization: org._id,
-            role: user.role,
+            role: user.role || userRoles.Admin,
           });
         })
         .catch((err) => {
@@ -74,7 +76,7 @@ export const userService = {
           _id: savedUser.organization._id,
           name: savedUser.organization.name,
         },
-        role: user.role,
+        role: user.role || 'Admin',
       };
 
       return new ServiceResponse<UserResponse>(
