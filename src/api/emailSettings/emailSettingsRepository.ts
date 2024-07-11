@@ -1,7 +1,7 @@
 import { UpdateResult } from 'mongodb';
 
 import { EmailSettingsModel } from '@/api/emailSettings/emailSettingsModel';
-import { EmailSettings, EmailSettingsTest } from '@/api/emailSettings/emailSettingsSchema';
+import { EmailSettings, EmailSettingsTest, NewEmailSettings } from '@/api/emailSettings/emailSettingsSchema';
 import { mongoDatabase } from '@/api/mongoDatabase';
 import { sendEmail } from '@/common/utils/sendEmail';
 
@@ -23,7 +23,7 @@ export const emailSettingsRepository = {
     }
   },
 
-  insertEmailSettings: async (emailSettings: EmailSettings): Promise<EmailSettings> => {
+  insertEmailSettings: async (emailSettings: NewEmailSettings): Promise<EmailSettings> => {
     try {
       const mongodb = await emailSettingsRepository.startConnection();
       const EmailSettingsCollection = mongodb.model<EmailSettings>('EmailSettings');

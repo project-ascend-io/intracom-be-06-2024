@@ -2,7 +2,12 @@ import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
 import { emailSettingsRepository } from '@/api/emailSettings/emailSettingsRepository';
-import { EmailSettings, EmailSettingsSchema, EmailSettingsTestSchema } from '@/api/emailSettings/emailSettingsSchema';
+import {
+  EmailSettings,
+  EmailSettingsSchema,
+  EmailSettingsTestSchema,
+  NewEmailSettingsSchema,
+} from '@/api/emailSettings/emailSettingsSchema';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { logger } from '@/server';
 
@@ -35,7 +40,7 @@ export const emailSettingsService = {
   // Inserts a new email settings into the database
   insertEmailSettings: async (request: Request): Promise<ServiceResponse<EmailSettings | null>> => {
     try {
-      const emailSettings = EmailSettingsSchema.parse({ ...request.body });
+      const emailSettings = NewEmailSettingsSchema.parse({ ...request.body });
 
       const newEmailSettings = await emailSettingsRepository.insertEmailSettings(emailSettings);
 

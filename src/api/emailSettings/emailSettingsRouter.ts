@@ -3,9 +3,9 @@ import express, { Request, Response, Router } from 'express';
 
 import { EmailSettingsSchema } from '@/api/emailSettings/emailSettingsSchema';
 import { emailSettingsService } from '@/api/emailSettings/emailSettingsService';
-import { GetEmailSettingsSchema } from '@/api/emailSettings/emailSettingsValidation';
+import { GetEmailSettingsSchema, PostEmailSettingsSchema } from '@/api/emailSettings/emailSettingsValidation';
 import { createApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
-import { handleServiceResponse } from '@/common/utils/httpHandlers';
+import { handleServiceResponse, validateRequest } from '@/common/utils/httpHandlers';
 
 export const emailSettingsRegistry = new OpenAPIRegistry();
 
@@ -20,7 +20,7 @@ export const emailSettingsRouter: Router = (() => {
     responses: createApiResponse(EmailSettingsSchema, 'Success'),
   });
 
-  router.get('/organizations/:id', async (_req: Request, res: Response) => {
+  router.get('/organizations/:id', validateRequest(GetEmailSettingsSchema), async (_req: Request, res: Response) => {
     const id = _req.params.id as string;
     const serviceResponse = await emailSettingsService.findById(id);
     handleServiceResponse(serviceResponse, res);
@@ -37,7 +37,7 @@ export const emailSettingsRouter: Router = (() => {
     },
   });
 
-  router.post('/', async (_req: Request, res: Response) => {
+  router.post('/', validateRequest(PostEmailSettingsSchema), async (_req: Request, res: Response) => {
     const serviceResponse = await emailSettingsService.insertEmailSettings(_req);
     handleServiceResponse(serviceResponse, res);
   });
@@ -50,7 +50,7 @@ export const emailSettingsRouter: Router = (() => {
     responses: createApiResponse(EmailSettingsSchema, 'Success'),
   });
 
-  router.put('/:id', async (_req: Request, res: Response) => {
+  router.put('/:id', validateRequest(GetEmailSettingsSchema), async (_req: Request, res: Response) => {
     const id = _req.params.id as string;
     const serviceResponse = await emailSettingsService.putEmailSettings(id, _req);
     handleServiceResponse(serviceResponse, res);
@@ -64,7 +64,7 @@ export const emailSettingsRouter: Router = (() => {
     responses: createApiResponse(EmailSettingsSchema, 'Success'),
   });
 
-  router.post('/test', async (_req: Request, res: Response) => {
+  router.post('/test', validateRequest(PostEmailSettingsSchema), async (_req: Request, res: Response) => {
     const serviceResponse = await emailSettingsService.testEmailSettings(_req);
     handleServiceResponse(serviceResponse, res);
   });
