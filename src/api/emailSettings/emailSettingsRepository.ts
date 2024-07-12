@@ -15,10 +15,10 @@ export const emailSettingsRepository = {
     try {
       const mongodb = await emailSettingsRepository.startConnection();
       const EmailSettingsCollection = mongodb.model<EmailSettings>('EmailSettings');
-      const emailSettings = await EmailSettingsCollection.findOne({ _id: id });
+      const emailSettings = await EmailSettingsCollection.findOne({ organization: id });
       return emailSettings;
     } catch (err) {
-      console.error('Error finding email-settings by id: ', err);
+      console.error('Error finding email-settings by organization id: ', err);
       throw err;
     }
   },
@@ -43,9 +43,9 @@ export const emailSettingsRepository = {
       const EmailSettingsCollection = mongodb.model<EmailSettings>('EmailSettings');
 
       const updateData = { $set: emailSettings };
-      const savedEmailSettings = await EmailSettingsCollection.updateOne({ _id: id }, updateData);
+      const savedEmailSettings = await EmailSettingsCollection.updateOne({ organization: id }, updateData);
       if (savedEmailSettings.matchedCount === 0) {
-        console.log('No email settings found with the given username to update.');
+        console.log('No email settings found with the given organization id to update.');
         return null;
       }
       return savedEmailSettings;
