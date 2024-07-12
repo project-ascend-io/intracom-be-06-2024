@@ -12,8 +12,9 @@ export const NewEmailSettingsSchema = z.object({
   server: z.string().openapi({ example: 'http://www.localhost.com' }),
   port: z.number().openapi({ example: 5432 }),
   username: z.string().openapi({ example: 'root' }),
-  password: z.string().openapi({ example: 'securepassword' }),
+  password: z.string().openapi({ example: 'apikey' }),
   securityType: z.string().openapi({ example: 'TLS' }),
+  organization: z.string().openapi({ example: '668f0c2ce629' }),
 });
 
 export const EmailSettingsSchema = z.object({
@@ -23,6 +24,7 @@ export const EmailSettingsSchema = z.object({
   username: z.string().openapi({ example: 'root' }),
   password: z.string().openapi({ example: 'securepassword' }),
   securityType: z.string().openapi({ example: 'TLS' }),
+  organization: z.string().openapi({ example: '668f0c2ce629' }),
 });
 
 export const EmailSettingsTestSchema = z.object({
@@ -34,6 +36,14 @@ export const EmailSettingsTestSchema = z.object({
   email: z.string().openapi({ example: 'email@example.com' }),
 });
 
+export const EmailSettingsTestResponseSchema = z.object({
+  success: z.boolean().openapi({ example: true }),
+  message: z.string().openapi({ example: 'Email Settings found' }),
+  responseObject: z.null().openapi({ example: null }),
+  statusCode: z.number().openapi({ example: 200 }),
+});
+
+export type EmailSettingsTestResponse = z.infer<typeof EmailSettingsTestResponseSchema>;
 export type NewEmailSettings = z.infer<typeof NewEmailSettingsSchema>;
 export type EmailSettings = z.infer<typeof EmailSettingsSchema>;
 export type EmailSettingsTest = z.infer<typeof EmailSettingsTestSchema>;
