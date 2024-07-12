@@ -9,6 +9,7 @@ const mongooseEmailSettingsSchema = new Schema<EmailSettings>(
     username: { type: String, required: true },
     password: { type: String, required: true },
     securityType: { type: String, required: true },
+    organization: { type: String, required: true },
   },
   {
     timestamps: true,
