@@ -1,26 +1,39 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import express, { Request, Response, Router } from 'express';
+import { z } from 'zod';
 
-import { EmailSettingsSchema } from '@/api/emailSettings/emailSettingsSchema';
+import {
+  EmailSettingsSchema,
+  EmailSettingsTestSchema,
+  NewEmailSettingsSchema,
+} from '@/api/emailSettings/emailSettingsSchema';
 import { emailSettingsService } from '@/api/emailSettings/emailSettingsService';
-import { GetEmailSettingsSchema, PostEmailSettingsSchema } from '@/api/emailSettings/emailSettingsValidation';
+import {
+  GetEmailSettingsSchema,
+  PostEmailSettingsSchema,
+  PostEmailSettingsTestSchema,
+} from '@/api/emailSettings/emailSettingsValidation';
 import { createApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '@/common/utils/httpHandlers';
 
 export const emailSettingsRegistry = new OpenAPIRegistry();
+
+emailSettingsRegistry.register('EmailSettings', EmailSettingsSchema);
+
+const nullType = z.null();
 
 export const emailSettingsRouter: Router = (() => {
   const router = express.Router();
 
   emailSettingsRegistry.registerPath({
     method: 'get',
-    path: '/email-settings/organizations/{id}',
+    path: '/email-settings/{id}',
     tags: ['Email Settings'],
     request: { params: GetEmailSettingsSchema.shape.params },
     responses: createApiResponse(EmailSettingsSchema, 'Success'),
   });
 
-  router.get('/organizations/:id', validateRequest(GetEmailSettingsSchema), async (_req: Request, res: Response) => {
+  router.get('/:id', validateRequest(GetEmailSettingsSchema), async (_req: Request, res: Response) => {
     const id = _req.params.id as string;
     const serviceResponse = await emailSettingsService.findById(id);
     handleServiceResponse(serviceResponse, res);
@@ -32,8 +45,7 @@ export const emailSettingsRouter: Router = (() => {
     tags: ['Email Settings'],
     responses: createApiResponse(EmailSettingsSchema, 'Success'),
     request: {
-      params: EmailSettingsSchema,
-      body: createPostBodyParams(EmailSettingsSchema),
+      body: createPostBodyParams(NewEmailSettingsSchema),
     },
   });
 
@@ -46,7 +58,10 @@ export const emailSettingsRouter: Router = (() => {
     method: 'put',
     path: '/email-settings',
     tags: ['Email Settings'],
-    request: { params: GetEmailSettingsSchema.shape.params },
+    request: {
+      params: GetEmailSettingsSchema.shape.params,
+      body: createPostBodyParams(EmailSettingsSchema),
+    },
     responses: createApiResponse(EmailSettingsSchema, 'Success'),
   });
 
@@ -60,11 +75,11 @@ export const emailSettingsRouter: Router = (() => {
     method: 'post',
     path: '/email-settings/test',
     tags: ['Email Settings'],
-    request: { params: GetEmailSettingsSchema.shape.params },
-    responses: createApiResponse(EmailSettingsSchema, 'Success'),
+    request: { body: createPostBodyParams(EmailSettingsTestSchema) },
+    responses: createApiResponse(nullType, 'success'),
   });
 
-  router.post('/test', validateRequest(PostEmailSettingsSchema), async (_req: Request, res: Response) => {
+  router.post('/test', validateRequest(PostEmailSettingsTestSchema), async (_req: Request, res: Response) => {
     const serviceResponse = await emailSettingsService.testEmailSettings(_req);
     handleServiceResponse(serviceResponse, res);
   });
