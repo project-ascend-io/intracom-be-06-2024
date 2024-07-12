@@ -43,7 +43,10 @@ export const userService = {
     }
   },
 
-  insertUser: async (user: PostUser): Promise<ServiceResponse<UserResponse | null>> => {
+  insertUser: async (
+    user: PostUser,
+    role: userRoles = userRoles.Admin
+  ): Promise<ServiceResponse<UserResponse | null>> => {
     try {
       const existingUser = await userRepository.findByEmailAsync(user.email);
 
@@ -61,7 +64,7 @@ export const userService = {
             email: user.email,
             password: user.password,
             organization: org._id,
-            role: user.role || userRoles.Admin,
+            role,
           });
         })
         .catch((err) => {

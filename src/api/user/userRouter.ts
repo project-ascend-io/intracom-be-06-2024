@@ -8,6 +8,8 @@ import { GetUserSchema, PostUserSchema } from '@/api/user/userValidation';
 import { createApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '@/common/utils/httpHandlers';
 
+import { userRoles } from './userModel';
+
 export const userRegistry = new OpenAPIRegistry();
 
 userRegistry.register('User', UserCompleteSchema);
@@ -47,14 +49,14 @@ export const userRouter: Router = (() => {
     tags: ['User'],
     responses: createApiResponse(UserResponseSchema, 'Success'),
     request: {
-      body: createPostBodyParams(UserSchema),
+      body: createPostBodyParams(PostUserSchema.shape.body),
     },
   });
 
   router.post('/', validateRequest(PostUserSchema), async (_req: Request, res: Response) => {
     console.log('Async call');
     const user = PostUserSchema.shape.body.parse({ ..._req.body });
-    const serviceResponse = await userService.insertUser(user);
+    const serviceResponse = await userService.insertUser(user, userRoles.Admin);
     handleServiceResponse(serviceResponse, res);
   });
 

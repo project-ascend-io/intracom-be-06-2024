@@ -2,8 +2,6 @@ import { z } from 'zod';
 
 import { commonValidations } from '@/common/utils/commonValidation';
 
-import { userRolesArray } from './userSchema';
-
 export const GetUserSchema = z.object({
   params: z.object({ id: commonValidations.id }),
 });
@@ -12,10 +10,9 @@ export const PostUserSchema = z.object({
   body: z
     .object({
       email: commonValidations.email,
-      username: z.string().min(5),
+      username: z.string().min(5).openapi({ example: 'johndoe' }),
       organization: commonValidations.organization,
       password: commonValidations.password,
-      role: z.enum(userRolesArray).optional(),
     })
     .superRefine(({ password }, checkPassComplexity) => {
       const containsUppercase = (ch: string) => /[A-Z]/.test(ch);
