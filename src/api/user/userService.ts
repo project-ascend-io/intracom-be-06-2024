@@ -79,7 +79,7 @@ export const userService = {
           _id: savedUser.organization._id,
           name: savedUser.organization.name,
         },
-        role: user.role || 'Admin',
+        role: savedUser.role,
       };
 
       return new ServiceResponse<UserResponse>(

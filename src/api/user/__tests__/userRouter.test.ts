@@ -3,11 +3,13 @@ import mongoose from 'mongoose';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, Mock, TestContext, vi } from 'vitest';
 
-import { BasicUser, User } from '@/api/user/userSchema';
+import { User, UserResponse } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
 import { PostUser } from '@/api/user/userValidation';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { app } from '@/server';
+
+import { userRoles } from '../userModel';
 
 vi.mock('../userService', () => ({
   userService: {
@@ -138,7 +140,6 @@ describe('User API Endpoints', () => {
         password: 'testing',
         username: 'newUser',
         organization: 'Example Corp.',
-        role: 'User',
       };
       // Assert
       const response = await request(app).post(`/users`).send(newUser).set('Accept', 'application/json');
@@ -146,21 +147,6 @@ describe('User API Endpoints', () => {
       expect(response.statusCode).toEqual(StatusCodes.BAD_REQUEST);
     });
 
-    it('should return invalid enum value for the role', async () => {
-      const newUser: PostUser = {
-        email: 'newUser@gmail.com',
-        password: 'Testing123!',
-        username: 'newUser',
-        organization: 'Example Corp.',
-        role: 'Developer',
-      };
-
-      const response = await request(app).post(`/users`).send(newUser).set('Accept', 'application/json');
-
-      expect(response.statusCode).toEqual(StatusCodes.BAD_REQUEST);
-      const responseBody: ServiceResponse<BasicUser> = response.body;
-      expect(responseBody.message).toContain('Invalid input: Role Invalid enum value');
-    });
     it('should return the newly created user', async () => {
       // Act
       const newUser: PostUser = {
@@ -168,22 +154,31 @@ describe('User API Endpoints', () => {
         password: 'Testing123!',
         username: 'newUser',
         organization: 'Example Corp.',
-        role: 'User',
       };
 
-      const responseMock = new ServiceResponse<PostUser>(
+      const userResponse = {
+        _id: new mongoose.mongo.ObjectId(),
+        ...newUser,
+        role: userRoles.Admin,
+        organization: {
+          _id: new mongoose.mongo.ObjectId(),
+          name: 'Example Corp.',
+        },
+      };
+
+      const responseMock = new ServiceResponse<UserResponse>(
         ResponseStatus.Success,
         'User created.',
-        newUser,
-        StatusCodes.OK
+        userResponse,
+        StatusCodes.CREATED
       );
       (userService.insertUser as Mock).mockReturnValue(responseMock);
 
       // Assert
       const response = await request(app).post(`/users`).send(newUser).set('Accept', 'application/json');
 
-      expect(response.statusCode).toEqual(StatusCodes.OK);
-      const responseBody: ServiceResponse<BasicUser> = response.body;
+      expect(response.statusCode).toEqual(StatusCodes.CREATED);
+      const responseBody: ServiceResponse<UserResponse> = response.body;
       expect(responseBody.message).toContain('User created.');
       expect(responseBody.responseObject).toMatchObject({
         email: 'newUser@gmail.com',

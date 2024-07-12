@@ -57,6 +57,7 @@ export const userRouter: Router = (() => {
     console.log('Async call');
     const user = PostUserSchema.shape.body.parse({ ..._req.body });
     const serviceResponse = await userService.insertUser(user, userRoles.Admin);
+    console.log('Service Reponse: ', serviceResponse);
     handleServiceResponse(serviceResponse, res);
   });
 
