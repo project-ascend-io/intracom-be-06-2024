@@ -1,18 +1,15 @@
 import bcrypt from 'bcryptjs';
 import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import jwt from 'jsonwebtoken';
 
 import { organizationRepository } from '@/api/organization/organizationRepository';
 import { userRepository } from '@/api/user/userRepository';
 import { BasicUser, User, UserResponse } from '@/api/user/userSchema';
 import { PostUser } from '@/api/user/userValidation';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
-import { env } from '@/common/utils/envConfig';
 import { logger } from '@/server';
 
 export const userService = {
-  // Retrieves all users from the database
   findAll: async (): Promise<ServiceResponse<User[] | null>> => {
     try {
       const users = await userRepository.findAllAsync();
@@ -105,11 +102,10 @@ export const userService = {
 
       const savedUser = await userRepository.insertUser(newUser);
 
-      const payload = { id: savedUser._id };
-      const { JWT_SECRET } = env;
-      const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+      // This sets up the session and sets a session variable 'userId' with the user's ID
+      (request.session as any).userId = savedUser._id;
 
-      return new ServiceResponse<string>(ResponseStatus.Success, 'User created.', token, StatusCodes.OK);
+      return new ServiceResponse(ResponseStatus.Success, 'User created.', null, StatusCodes.OK);
     } catch (err) {
       const errorMessage = `userService - Signup - Error Message: ${err}`;
       logger.error(errorMessage);

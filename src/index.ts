@@ -4,6 +4,8 @@ import session from 'express-session';
 import { env } from '@/common/utils/envConfig';
 import { app, logger } from '@/server';
 
+import { isAuthenticated } from './middleware/auth';
+
 // This loads environment variables from the .env file
 dotenv.config();
 
@@ -33,24 +35,28 @@ app.use(
 
 // This is the route handler for "/"
 app.get('/', (req, res) => {
-  // This sets a session variable named 'name' to 'User Session'
-  req.session.name = 'User Session';
+  // This sets the session variable 'name' to 'User Session'
+  (req.session as any).name = 'User Session';
   // This sends a response to the client with the message "Session Set"
   return res.send('Session Set');
 });
 
 // This is the route handler for "/session"
 app.get('/session', (req, res) => {
-  // This retrieves the value of the session variable 'name' from the session object
-  const name = req.session.name;
+  // This retrieves the value of the session variable 'name' ('User Session') from the session object
+  const name = (req.session as any).name;
   // This sends a response to the client with the value stored in 'name'
   return res.send(name);
 
-  /*  This destroys the current session, removing all session data associated with the client
-  req.session.destroy(function(error){ 
-    console.log("Session Destroyed") 
-  }); 
-  */
+  // This destroys the current session, removing all session data associated with the client
+  // req.session.destroy(function(error){
+  //   console.log("Session Destroyed");
+  // });
+});
+
+// This is the route handler for "/protected route
+app.get('/protected', isAuthenticated, (req, res) => {
+  return res.send('This is a protected route');
 });
 
 const server = app.listen(env.PORT, () => {
