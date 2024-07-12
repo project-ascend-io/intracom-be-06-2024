@@ -41,7 +41,6 @@ export const emailSettingsService = {
   insertEmailSettings: async (request: Request): Promise<ServiceResponse<EmailSettings | null>> => {
     try {
       const emailSettings = NewEmailSettingsSchema.parse({ ...request.body });
-
       const newEmailSettings = await emailSettingsRepository.insertEmailSettings(emailSettings);
 
       return new ServiceResponse<EmailSettings>(
@@ -51,7 +50,7 @@ export const emailSettingsService = {
         StatusCodes.OK
       );
     } catch (err) {
-      const errorMessage = `userProfileService - InsertUserProfile - Error Message`;
+      const errorMessage = `emailSettingsService - InsertUserProfile - Error Message`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
