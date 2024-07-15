@@ -37,7 +37,7 @@ export const emailSettingsRepository = {
     }
   },
 
-  updateEmailSettings: async (id: string, emailSettings: EmailSettings): Promise<UpdateResult<Document> | null> => {
+  updateEmailSettings: async (id: string, emailSettings: NewEmailSettings): Promise<UpdateResult<Document> | null> => {
     try {
       const mongodb = await emailSettingsRepository.startConnection();
       const EmailSettingsCollection = mongodb.model<EmailSettings>('EmailSettings');

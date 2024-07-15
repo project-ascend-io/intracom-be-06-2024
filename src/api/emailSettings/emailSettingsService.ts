@@ -4,7 +4,6 @@ import { StatusCodes } from 'http-status-codes';
 import { emailSettingsRepository } from '@/api/emailSettings/emailSettingsRepository';
 import {
   EmailSettings,
-  EmailSettingsSchema,
   EmailSettingsTestSchema,
   NewEmailSettingsSchema,
 } from '@/api/emailSettings/emailSettingsSchema';
@@ -59,7 +58,7 @@ export const emailSettingsService = {
   // Changes data on an email settings in the database
   putEmailSettings: async (id: string, request: Request): Promise<ServiceResponse<null>> => {
     try {
-      const emailSettings = EmailSettingsSchema.parse({ ...request.body });
+      const emailSettings = NewEmailSettingsSchema.parse({ ...request.body });
 
       const updateResult = await emailSettingsRepository.updateEmailSettings(id, emailSettings);
 
@@ -79,7 +78,7 @@ export const emailSettingsService = {
         );
       }
     } catch (error) {
-      const errorMessage = `emailSettingsService - PatchEmailSettings - Error Message`;
+      const errorMessage = `emailSettingsService - PutEmailSettings - Error Message`;
       logger.error(errorMessage);
       return new ServiceResponse<null>(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
