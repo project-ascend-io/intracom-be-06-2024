@@ -10,7 +10,7 @@ export const PostUserSchema = z.object({
   body: z
     .object({
       email: commonValidations.email,
-      username: z.string().min(5),
+      username: z.string().min(5).openapi({ example: 'johndoe' }),
       organization: commonValidations.organization,
       password: commonValidations.password,
     })
