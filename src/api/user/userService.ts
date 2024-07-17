@@ -9,6 +9,8 @@ import { PostUser } from '@/api/user/userValidation';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { logger } from '@/server';
 
+import { userRoles } from './userModel';
+
 export const userService = {
   findAll: async (): Promise<ServiceResponse<User[] | null>> => {
     try {
@@ -38,7 +40,10 @@ export const userService = {
     }
   },
 
-  insertUser: async (user: PostUser): Promise<ServiceResponse<UserResponse | null>> => {
+  insertUser: async (
+    user: PostUser,
+    role: userRoles = userRoles.Admin
+  ): Promise<ServiceResponse<UserResponse | null>> => {
     try {
       const existingUser = await userRepository.findByEmailAsync(user.email);
 
@@ -56,6 +61,7 @@ export const userService = {
             email: user.email,
             password: user.password,
             organization: org._id,
+            role,
           });
         })
         .catch((err) => {
@@ -70,9 +76,15 @@ export const userService = {
           _id: savedUser.organization._id,
           name: savedUser.organization.name,
         },
+        role: savedUser.role,
       };
 
-      return new ServiceResponse<UserResponse>(ResponseStatus.Success, 'User created.', userResponse, StatusCodes.OK);
+      return new ServiceResponse<UserResponse>(
+        ResponseStatus.Success,
+        'User created.',
+        userResponse,
+        StatusCodes.CREATED
+      );
     } catch (err) {
       console.log(err);
       const errorMessage = `Error creating new user: , ${(err as Error).message}`;
@@ -84,7 +96,7 @@ export const userService = {
 
   signup: async (request: Request): Promise<ServiceResponse<string | null>> => {
     try {
-      const { email, username, password, organization } = request.body;
+      const { email, username, password, organization, role } = request.body;
 
       const existingUser = await userRepository.findByEmailAsync(email);
       if (existingUser) {
@@ -98,6 +110,7 @@ export const userService = {
         username,
         organization,
         password: hashedPassword,
+        role,
       };
 
       const savedUser = await userRepository.insertUser(newUser);

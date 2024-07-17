@@ -3,12 +3,18 @@ import mongoose, { Document, Model, Schema } from 'mongoose';
 
 import { User } from '@/api/user/userSchema';
 
+export enum userRoles {
+  Admin = 'Admin',
+  User = 'User',
+}
+
 const mongooseUserSchema = new Schema<User>(
   {
     email: { type: String, required: true, unique: true },
     username: { type: String, required: true },
     password: { type: String, required: true },
     organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+    role: { type: String, enum: Object.values(userRoles), required: true },
   },
   { timestamps: true }
 );

@@ -2,17 +2,22 @@ import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { ObjectId } from 'mongodb';
 import { z } from 'zod';
 
+import { userRoles } from './userModel';
+
 extendZodWithOpenApi(z);
 
 export const ModelID = z.object({
   _id: z.instanceof(ObjectId),
 });
 
+export const userRolesArray = Object.values(userRoles) as [string, ...string[]];
+
 export const UserSchema = z.object({
   email: z.string().openapi({ example: 'johndoe@example.com' }),
   username: z.string().openapi({ example: 'johndoe' }),
-  password: z.string().openapi({ example: 'password' }),
+  password: z.string().openapi({ example: 'password2!P' }),
   organization: z.instanceof(ObjectId),
+  role: z.enum(userRolesArray).openapi({ example: userRoles.Admin }),
 });
 
 export const UserResponseSchema = z
@@ -24,6 +29,7 @@ export const UserResponseSchema = z
         name: z.string().openapi('Research Corp.'),
       })
       .merge(ModelID),
+    role: z.enum(userRolesArray).openapi({ example: userRoles.Admin }),
   })
   .merge(ModelID);
 
