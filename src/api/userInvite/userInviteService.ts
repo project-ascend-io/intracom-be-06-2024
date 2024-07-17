@@ -41,6 +41,20 @@ export const userInviteService = {
     }
   },
 
+  findByEmail: async (email: string): Promise<ServiceResponse<UserInvite | null>> => {
+    try {
+      const userInvite = await userInviteRepository.findByEmailAsync(email);
+      if (!userInvite) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User Invite not found', null, StatusCodes.NOT_FOUND);
+      }
+      return new ServiceResponse<UserInvite>(ResponseStatus.Success, 'User Invite found', userInvite, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error finding user with email ${email}:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
   insert: async (user: PostUserInvite): Promise<ServiceResponse<UserInvite | null>> => {
     try {
       const existingUser = await userInviteRepository.findByEmailAsync(user.email);
