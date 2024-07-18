@@ -10,11 +10,11 @@ interface EmailOptions {
   message: string;
 }
 
-export const sendEmail = async (options: EmailOptions) => {
+export const sendTestEmail = async (options: EmailOptions) => {
   const transporter: Transporter = nodemailer.createTransport({
     host: options.server,
     port: options.port,
-    secure: false,
+    secure: options.port === 465 ? true : false,
     auth: {
       user: options.username,
       pass: options.password,
@@ -22,7 +22,7 @@ export const sendEmail = async (options: EmailOptions) => {
   } as any);
 
   const mailOptions = {
-    from: 'robert@projectascend.io',
+    from: 'oscar@projectascend.io',
     to: options.to,
     subject: options.subject,
     html: options.message,
