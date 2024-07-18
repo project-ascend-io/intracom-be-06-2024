@@ -3,7 +3,7 @@ import { UpdateResult } from 'mongodb';
 import { EmailSettingsModel } from '@/api/emailSettings/emailSettingsModel';
 import { EmailSettings, EmailSettingsTest, NewEmailSettings } from '@/api/emailSettings/emailSettingsSchema';
 import { mongoDatabase } from '@/api/mongoDatabase';
-import { sendEmail } from '@/common/utils/sendEmail';
+import { sendTestEmail } from '@/common/utils/sendTestEmail';
 
 export const emailSettingsRepository = {
   startConnection: async () => {
@@ -28,7 +28,6 @@ export const emailSettingsRepository = {
       const mongodb = await emailSettingsRepository.startConnection();
       const EmailSettingsCollection = mongodb.model<EmailSettings>('EmailSettings');
       const newEmailSettings = new EmailSettingsModel(emailSettings);
-      console.log(newEmailSettings);
       const savedEmailSettings = await EmailSettingsCollection.create(newEmailSettings);
       return savedEmailSettings;
     } catch (err) {
@@ -55,7 +54,6 @@ export const emailSettingsRepository = {
     }
   },
 
-  // Send test email using nodemailer
   testEmailSettings: async (request: EmailSettingsTest): Promise<boolean> => {
     try {
       const { server, port, username, password, email } = request;
@@ -74,7 +72,7 @@ export const emailSettingsRepository = {
         message: 'This is a test email',
       };
 
-      await sendEmail(options);
+      await sendTestEmail(options);
 
       return true;
     } catch (err) {
