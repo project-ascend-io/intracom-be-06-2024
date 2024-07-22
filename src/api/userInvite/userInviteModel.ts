@@ -12,9 +12,10 @@ export enum inviteState {
 const mongooseUserInviteSchema = new Schema<UserInvite>(
   {
     email: { type: String, required: true, unique: true },
-    expires_in: { type: String, required: true },
     state: { type: String, enum: Object.values(inviteState), required: true },
     organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+    expires_in: { type: String, required: true },
+    hash: { type: String, required: true },
   },
   { timestamps: true }
 );

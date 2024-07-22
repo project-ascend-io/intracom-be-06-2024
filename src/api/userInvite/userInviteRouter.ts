@@ -7,6 +7,7 @@ import {
   GetUserbyEmailInviteSchema,
   GetUserInviteSchema,
   PostUserInviteSchema,
+  UpdateUserInviteSchema,
 } from '@/api/userInvite/userInviteValidation';
 import { createApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '@/common/utils/httpHandlers';
@@ -17,7 +18,7 @@ export const userInviteRegistry = new OpenAPIRegistry();
 
 userInviteRegistry.register('User Invite', UserInviteCompleteSchema);
 
-export const UserInvite: Router = (() => {
+export const userInviteRouter: Router = (() => {
   const router = express.Router();
 
   userInviteRegistry.registerPath({
@@ -74,9 +75,28 @@ export const UserInvite: Router = (() => {
   });
 
   router.post('/', validateRequest(PostUserInviteSchema), async (_req: Request, res: Response) => {
-    console.log('Async call');
-    const user = PostUserInviteSchema.shape.body.parse({ ..._req.body });
-    const serviceResponse = await userInviteService.insert(user);
+    const userInvite = PostUserInviteSchema.shape.body.parse({ ..._req.body });
+    const serviceResponse = await userInviteService.insert(userInvite);
+    handleServiceResponse(serviceResponse, res);
+  });
+
+  userInviteRegistry.registerPath({
+    method: 'patch',
+    path: '/user-invites/{id}',
+    tags: ['User Invite'],
+    responses: createApiResponse(UserInviteCompleteSchema, 'Success'),
+    request: {
+      body: createPostBodyParams(UpdateUserInviteSchema.shape.body),
+    },
+  });
+
+  router.patch('/:id', validateRequest(UpdateUserInviteSchema), async (req: Request, res: Response) => {
+    const id = req.params.id as string;
+    // const userInvite = await userInviteService.findById(id);
+    // const userInvite = serviceRes.responseObject;
+    const userInviteParams = UpdateUserInviteSchema.shape.body.parse({ ...req.body });
+    const serviceResponse = await userInviteService.update(id, userInviteParams);
+
     handleServiceResponse(serviceResponse, res);
   });
 

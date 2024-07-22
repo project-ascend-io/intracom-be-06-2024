@@ -1,11 +1,10 @@
 import bcrypt from 'bcryptjs';
-import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import jwt from 'jsonwebtoken';
 
 import { organizationRepository } from '@/api/organization/organizationRepository';
 import { userRepository } from '@/api/user/userRepository';
-import { BasicUser, User, UserResponse } from '@/api/user/userSchema';
+import { User, UserResponse } from '@/api/user/userSchema';
 import { PostUser } from '@/api/user/userValidation';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { env } from '@/common/utils/envConfig';
@@ -43,16 +42,16 @@ export const userService = {
     }
   },
 
-  insertUser: async (
-    user: PostUser,
-    role: userRoles = userRoles.Admin
-  ): Promise<ServiceResponse<UserResponse | null>> => {
+  insertUser: async (user: PostUser, role: userRoles): Promise<ServiceResponse<UserResponse | null>> => {
     try {
       const existingUser = await userRepository.findByEmailAsync(user.email);
 
       if (existingUser) {
         return new ServiceResponse(ResponseStatus.Failed, 'User already exists', null, StatusCodes.BAD_REQUEST);
       }
+      // legacy code from signup method that was removed
+      const hashedPassword = await bcrypt.hash(user.password, 10);
+      /////
 
       const savedUser = await organizationRepository
         .insert({
@@ -62,7 +61,7 @@ export const userService = {
           return await userRepository.insertUser({
             username: user.username,
             email: user.email,
-            password: user.password,
+            password: hashedPassword,
             organization: org._id,
             role,
           });
@@ -82,6 +81,13 @@ export const userService = {
         role: savedUser.role,
       };
 
+      // legacy code from signup method that was removed.
+      const payload = { id: savedUser._id };
+      const { JWT_SECRET } = env;
+      const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+      console.log(token);
+      ////////////////
+
       return new ServiceResponse<UserResponse>(
         ResponseStatus.Success,
         'User created.',
@@ -92,39 +98,6 @@ export const userService = {
       console.log(err);
       const errorMessage = `Error creating new user: , ${(err as Error).message}`;
       //const errorMessage = `[Error] userService - InsertUser: `;
-      logger.error(errorMessage);
-      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
-    }
-  },
-
-  signup: async (request: Request): Promise<ServiceResponse<string | null>> => {
-    try {
-      const { email, username, password, organization, role } = request.body;
-
-      const existingUser = await userRepository.findByEmailAsync(email);
-      if (existingUser) {
-        return new ServiceResponse(ResponseStatus.Failed, 'User already exists', null, StatusCodes.BAD_REQUEST);
-      }
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      const newUser: BasicUser = {
-        email,
-        username,
-        organization,
-        password: hashedPassword,
-        role,
-      };
-
-      const savedUser = await userRepository.insertUser(newUser);
-
-      const payload = { id: savedUser._id };
-      const { JWT_SECRET } = env;
-      const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
-
-      return new ServiceResponse<string>(ResponseStatus.Success, 'User created.', token, StatusCodes.OK);
-    } catch (err) {
-      const errorMessage = `userService - Signup - Error Message: ${err}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }

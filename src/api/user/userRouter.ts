@@ -2,7 +2,7 @@ import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import express, { Request, Response, Router } from 'express';
 import { z } from 'zod';
 
-import { UserCompleteSchema, UserResponseSchema, UserSchema } from '@/api/user/userSchema';
+import { UserCompleteSchema, UserResponseSchema } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
 import { GetUserSchema, PostUserSchema } from '@/api/user/userValidation';
 import { createApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
@@ -65,15 +65,15 @@ export const userRouter: Router = (() => {
     method: 'post',
     path: '/signup',
     tags: ['User'],
-    responses: createApiResponse(UserCompleteSchema, 'Success'),
+    responses: createApiResponse(UserResponseSchema, 'Success'),
     request: {
-      params: UserSchema,
-      body: createPostBodyParams(UserSchema),
+      body: createPostBodyParams(PostUserSchema.shape.body),
     },
   });
 
   router.post('/signup', async (_req: Request, res: Response) => {
-    const serviceResponse = await userService.signup(_req);
+    const user = PostUserSchema.shape.body.parse({ ..._req.body });
+    const serviceResponse = await userService.insertUser(user, userRoles.User);
     handleServiceResponse(serviceResponse, res);
   });
 

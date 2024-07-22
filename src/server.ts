@@ -6,7 +6,7 @@ import { pino } from 'pino';
 import { healthCheckRouter } from '@/api/healthCheck/healthCheckRouter';
 import { organizationRouter } from '@/api/organization/organizationRouter';
 import { userRouter } from '@/api/user/userRouter';
-import { UserInvite } from '@/api/userInvite/userInviteRouter';
+import { userInviteRouter } from '@/api/userInvite/userInviteRouter';
 import { openAPIRouter } from '@/api-docs/openAPIRouter';
 import errorHandler from '@/common/middleware/errorHandler';
 import rateLimiter from '@/common/middleware/rateLimiter';
@@ -34,9 +34,9 @@ app.use(requestLogger);
 app.use('/health-check', healthCheckRouter);
 app.use('/organizations', organizationRouter);
 app.use('/users', userRouter);
-app.use('/user-invites', UserInvite);
-app.use('/user-invites/email', UserInvite);
-app.use('/user-invites/id', UserInvite);
+app.use('/user-invites', userInviteRouter);
+app.use('/user-invites/email', userInviteRouter);
+app.use('/user-invites/id', userInviteRouter);
 
 // Swagger UI
 app.use(openAPIRouter);

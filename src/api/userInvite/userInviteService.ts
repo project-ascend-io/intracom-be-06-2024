@@ -1,11 +1,27 @@
+import crypto from 'crypto';
+import { randomBytes } from 'crypto';
 import { StatusCodes } from 'http-status-codes';
 
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { logger } from '@/server';
 
+import { inviteState } from './userInviteModel';
 import { userInviteRepository } from './userInviteRepository';
 import { UserInvite } from './userInviteSchema';
 import { PostUserInvite } from './userInviteValidation';
+
+const generateHash = (inputString: string) => {
+  const hash = crypto.createHash('sha256');
+  hash.update(inputString);
+  return hash.digest('hex');
+};
+
+const generateExpDate = () => {
+  const currentDate = new Date();
+  const daysToAdd = 7;
+  const expDate = new Date(currentDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+  return expDate.toISOString();
+};
 
 export const userInviteService = {
   get: async (): Promise<ServiceResponse<UserInvite[] | null>> => {
@@ -55,19 +71,69 @@ export const userInviteService = {
     }
   },
 
-  insert: async (user: PostUserInvite): Promise<ServiceResponse<UserInvite | null>> => {
+  insert: async (userInvite: PostUserInvite): Promise<ServiceResponse<UserInvite | null>> => {
     try {
-      const existingUser = await userInviteRepository.findByEmailAsync(user.email);
+      const existingUserInvite = await userInviteRepository.findByEmailAsync(userInvite.email);
 
-      if (existingUser) {
+      if (existingUserInvite) {
         return new ServiceResponse(ResponseStatus.Failed, 'User Invite already exists', null, StatusCodes.BAD_REQUEST);
       }
 
-      const savedUserInvite = await userInviteRepository.insert(user);
+      const savedUserInvite = await userInviteRepository.insert({
+        email: userInvite.email,
+        state: inviteState.Pending,
+        organization: userInvite.organization,
+        hash: generateHash(userInvite.email),
+        expires_in: generateExpDate(),
+      });
 
       return new ServiceResponse<UserInvite>(
         ResponseStatus.Success,
         'User invite created.',
+        savedUserInvite,
+        StatusCodes.CREATED
+      );
+    } catch (err) {
+      console.log(err);
+      const errorMessage = `[Error] insert service: , ${(err as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  update: async (id: string, userInviteParams: any): Promise<ServiceResponse<UserInvite | null>> => {
+    // const userInvite = await userInviteRepository.findByIdAsync(id);
+    // if (!userInvite) {
+    //   return new ServiceResponse(ResponseStatus.Failed, 'User Invite not found', null, StatusCodes.BAD_REQUEST);
+    // }
+
+    const isValid = (expirationDate: string) => {
+      return new Date(expirationDate) < new Date();
+    };
+
+    try {
+      if ('state' in userInviteParams) {
+        if (userInviteParams.state == inviteState.Accepted && isValid(userInviteParams.expires_in)) {
+          userInviteParams.state = inviteState.Accepted;
+        } else if (userInviteParams.state == inviteState.Denied) {
+          userInviteParams.state = inviteState.Denied;
+          userInviteParams.hash = '';
+          userInviteParams.expires_in = '';
+        } else if (userInviteParams.state == inviteState.Pending) {
+          const newStr = randomBytes(10).toString('hex');
+          console.log('new_string', newStr);
+
+          userInviteParams.hash = generateHash(userInviteParams.email + newStr);
+          console.log('new_hash', userInviteParams.hash);
+          userInviteParams.expires_in = generateExpDate();
+        }
+      }
+
+      const savedUserInvite = await userInviteRepository.update(id, userInviteParams);
+
+      return new ServiceResponse<UserInvite | null>(
+        ResponseStatus.Success,
+        'User invite updated.',
         savedUserInvite,
         StatusCodes.OK
       );
