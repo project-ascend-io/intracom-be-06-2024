@@ -63,7 +63,7 @@ export const userRouter: Router = (() => {
 
   userRegistry.registerPath({
     method: 'post',
-    path: '/signup',
+    path: '/users/signup',
     tags: ['User'],
     responses: createApiResponse(UserResponseSchema, 'Success'),
     request: {
