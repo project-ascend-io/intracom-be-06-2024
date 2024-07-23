@@ -38,7 +38,7 @@ export const userRepository = {
     }
   },
 
-  insertUser: async (user: BasicUser): Promise<UserResponse> => {
+  insertUserAndOrganization: async (user: BasicUser): Promise<UserResponse> => {
     try {
       await userRepository.startConnection();
       const newUser = new UserModel(user);
@@ -51,6 +51,17 @@ export const userRepository = {
       return foundUser;
     } catch (err) {
       console.error('[Error] insertUser: ', err);
+      throw err;
+    }
+  },
+
+  insertUser: async (user: BasicUser): Promise<UserResponse> => {
+    try {
+      await userRepository.startConnection();
+      const newUser = new UserModel(user);
+      return await newUser.save();
+    } catch (err) {
+      console.error('[Error] userInviteRepository - insert: ', err);
       throw err;
     }
   },

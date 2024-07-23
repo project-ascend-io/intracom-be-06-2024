@@ -15,13 +15,14 @@ vi.mock('../userService', () => ({
   userService: {
     findAll: vi.fn(),
     findById: vi.fn(),
-    insertUser: vi.fn(),
+    insertUserAndOrganization: vi.fn(),
     signup: vi.fn(),
   },
 }));
 
 vi.mock('../userRepository', () => ({
   userRepository: {
+    insertUserAndOrganization: vi.fn(),
     insertUser: vi.fn(),
   },
 }));
@@ -172,7 +173,7 @@ describe('User API Endpoints', () => {
         userResponse,
         StatusCodes.CREATED
       );
-      (userService.insertUser as Mock).mockReturnValue(responseMock);
+      (userService.insertUserAndOrganization as Mock).mockReturnValue(responseMock);
 
       // Assert
       const response = await request(app).post(`/users`).send(newUser).set('Accept', 'application/json');
