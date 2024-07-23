@@ -35,14 +35,11 @@ export const userInviteRouter: Router = (() => {
 
   userInviteRegistry.registerPath({
     method: 'get',
-    // path: '/user-invites/{id}',
     path: '/user-invites/id/{id}',
     tags: ['User Invite'],
     request: { params: GetUserInviteSchema.shape.params },
     responses: createApiResponse(UserInviteCompleteSchema, 'Success'),
   });
-
-  // router.get('/:id'
 
   router.get('/id/:id', validateRequest(GetUserInviteSchema), async (req: Request, res: Response) => {
     const id = req.params.id as string;
@@ -92,8 +89,6 @@ export const userInviteRouter: Router = (() => {
 
   router.patch('/:id', validateRequest(UpdateUserInviteSchema), async (req: Request, res: Response) => {
     const id = req.params.id as string;
-    // const userInvite = await userInviteService.findById(id);
-    // const userInvite = serviceRes.responseObject;
     const userInviteParams = UpdateUserInviteSchema.shape.body.parse({ ...req.body });
     const serviceResponse = await userInviteService.update(id, userInviteParams);
 

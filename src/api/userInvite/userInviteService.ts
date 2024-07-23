@@ -102,29 +102,25 @@ export const userInviteService = {
   },
 
   update: async (id: string, userInviteParams: any): Promise<ServiceResponse<UserInvite | null>> => {
-    // const userInvite = await userInviteRepository.findByIdAsync(id);
-    // if (!userInvite) {
-    //   return new ServiceResponse(ResponseStatus.Failed, 'User Invite not found', null, StatusCodes.BAD_REQUEST);
-    // }
-
     const isValid = (expirationDate: string) => {
-      return new Date(expirationDate) < new Date();
+      return new Date(expirationDate) > new Date();
     };
 
     try {
+      const userInvite = await userInviteRepository.findByIdAsync(id);
+      if (!userInvite) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User Invite not found', null, StatusCodes.BAD_REQUEST);
+      }
       if ('state' in userInviteParams) {
-        if (userInviteParams.state == inviteState.Accepted && isValid(userInviteParams.expires_in)) {
-          userInviteParams.state = inviteState.Accepted;
+        if (userInviteParams.state == inviteState.Accepted && !isValid(userInvite.expires_in)) {
+          userInviteParams.state = inviteState.Expired;
+          return new ServiceResponse(ResponseStatus.Failed, 'User Invite expired', null, StatusCodes.BAD_REQUEST);
         } else if (userInviteParams.state == inviteState.Denied) {
-          userInviteParams.state = inviteState.Denied;
           userInviteParams.hash = '';
           userInviteParams.expires_in = '';
         } else if (userInviteParams.state == inviteState.Pending) {
           const newStr = randomBytes(10).toString('hex');
-          console.log('new_string', newStr);
-
           userInviteParams.hash = generateHash(userInviteParams.email + newStr);
-          console.log('new_hash', userInviteParams.hash);
           userInviteParams.expires_in = generateExpDate();
         }
       }
