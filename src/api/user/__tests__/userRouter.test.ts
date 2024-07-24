@@ -73,9 +73,18 @@ describe('User API Endpoints', () => {
     it('should return a user for a valid ID', async ({ userList }: UserEndpointTestContext) => {
       // Arrange
       const testId = userList['1']._id;
-      const expectedUser = userList.find((user: User) => user._id === testId) as User;
+      const user = userList.find((user: User) => user._id === testId) as User;
+      const expectedUser: UserResponse = {
+        _id: user._id,
+        email: user.email,
+        username: user.username,
+        organization: {
+          _id: new mongoose.mongo.ObjectId(),
+          name: 'Beach Front',
+        },
+      };
 
-      const responseMock = new ServiceResponse<User>(
+      const responseMock = new ServiceResponse<UserResponse>(
         ResponseStatus.Success,
         'User found',
         expectedUser,
@@ -85,7 +94,7 @@ describe('User API Endpoints', () => {
 
       // Act
       const response = await request(app).get(`/users/${testId}`);
-      const responseBody: ServiceResponse<User> = response.body;
+      const responseBody: ServiceResponse<UserResponse> = response.body;
 
       // Assert
       expect(response.statusCode).toEqual(StatusCodes.OK);
@@ -188,7 +197,7 @@ describe('User API Endpoints', () => {
   });
 });
 
-function compareUsers(mockUser: User, responseUser: User) {
+function compareUsers(mockUser: User | UserResponse, responseUser: User | UserResponse) {
   if (!mockUser || !responseUser) {
     throw new Error('Invalid test data: mockUser or responseUser is undefined');
   }
