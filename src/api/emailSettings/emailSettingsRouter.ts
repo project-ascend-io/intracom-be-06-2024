@@ -27,7 +27,7 @@ export const emailSettingsRouter: Router = (() => {
 
   emailSettingsRegistry.registerPath({
     method: 'get',
-    path: '/organizations/:id/email-settings',
+    path: '/organizations/{id}/email-settings',
     tags: ['Email Settings'],
     request: { params: GetEmailSettingsSchema.shape.params },
     responses: createApiResponse(EmailSettingsSchema, 'Success'),
@@ -41,7 +41,7 @@ export const emailSettingsRouter: Router = (() => {
 
   emailSettingsRegistry.registerPath({
     method: 'post',
-    path: '/organizations/:id/email-settings',
+    path: '/organizations/{id}/email-settings',
     tags: ['Email Settings'],
     responses: createApiResponse(EmailSettingsSchema, 'Success'),
     request: {
@@ -56,7 +56,7 @@ export const emailSettingsRouter: Router = (() => {
 
   emailSettingsRegistry.registerPath({
     method: 'post',
-    path: '/organizations/:id/email-settings/test',
+    path: '/organizations/{id}/email-settings/test',
     tags: ['Email Settings'],
     request: { body: createPostBodyParams(EmailSettingsTestSchema) },
     responses: createApiResponse(nullType, 'success'),
