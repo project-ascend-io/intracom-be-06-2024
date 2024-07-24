@@ -84,6 +84,7 @@ export const userInviteRouter: Router = (() => {
     responses: createApiResponse(UserInviteCompleteSchema, 'Success'),
     request: {
       body: createPostBodyParams(UpdateUserInviteSchema.shape.body),
+      params: UpdateUserInviteSchema.shape.params,
     },
   });
 

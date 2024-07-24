@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { UserCompleteSchema, UserResponseSchema } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
-import { GetUserSchema, PostUserSchema } from '@/api/user/userValidation';
+import { GetUserSchema, PostAdminUserSchema, PostUserSchema } from '@/api/user/userValidation';
 import { createApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '@/common/utils/httpHandlers';
 
@@ -49,13 +49,13 @@ export const userRouter: Router = (() => {
     tags: ['User'],
     responses: createApiResponse(UserResponseSchema, 'Success'),
     request: {
-      body: createPostBodyParams(PostUserSchema.shape.body),
+      body: createPostBodyParams(PostAdminUserSchema.shape.body),
     },
   });
 
-  router.post('/', validateRequest(PostUserSchema), async (_req: Request, res: Response) => {
+  router.post('/', validateRequest(PostAdminUserSchema), async (_req: Request, res: Response) => {
     console.log('Async call');
-    const user = PostUserSchema.shape.body.parse({ ..._req.body });
+    const user = PostAdminUserSchema.shape.body.parse({ ..._req.body });
     const serviceResponse = await userService.insertUserAndOrganization(user, userRoles.Admin);
     console.log('Service Reponse: ', serviceResponse);
     handleServiceResponse(serviceResponse, res);
@@ -71,7 +71,7 @@ export const userRouter: Router = (() => {
     },
   });
 
-  router.post('/signup', async (_req: Request, res: Response) => {
+  router.post('/signup', validateRequest(PostUserSchema), async (_req: Request, res: Response) => {
     const user = PostUserSchema.shape.body.parse({ ..._req.body });
     const serviceResponse = await userService.insertUser(user, userRoles.User);
     handleServiceResponse(serviceResponse, res);

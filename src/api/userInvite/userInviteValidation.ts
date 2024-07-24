@@ -13,16 +13,16 @@ export const GetUserbyEmailInviteSchema = z.object({
 export const PostUserInviteSchema = z.object({
   body: z.object({
     email: commonValidations.email,
-    organization: commonValidations.id,
+    organization: commonValidations.id.openapi({ example: '668d84f418a02e326034360d' }),
   }),
 });
 
 export const UpdateUserInviteSchema = z.object({
+  params: z.object({ id: commonValidations.id }),
   body: z.object({
-    email: commonValidations.email.optional(),
     expires_in: z.string().datetime().optional(),
-    state: commonValidations.state.optional(),
-    organization: commonValidations.id.optional(),
+    state: commonValidations.state,
+    organization: commonValidations.id.optional().openapi({ example: '668d84f418a02e326034360d' }),
     hash: z.string().optional(),
   }),
 });

@@ -6,7 +6,7 @@ import { ObjectId } from 'mongodb';
 import { organizationRepository } from '@/api/organization/organizationRepository';
 import { userRepository } from '@/api/user/userRepository';
 import { User, UserResponse } from '@/api/user/userSchema';
-import { PostUser } from '@/api/user/userValidation';
+import { PostAdminUser, PostUser } from '@/api/user/userValidation';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { env } from '@/common/utils/envConfig';
 import { logger } from '@/server';
@@ -100,7 +100,10 @@ export const userService = {
     }
   },
 
-  insertUserAndOrganization: async (user: PostUser, role: userRoles): Promise<ServiceResponse<UserResponse | null>> => {
+  insertUserAndOrganization: async (
+    user: PostAdminUser,
+    role: userRoles
+  ): Promise<ServiceResponse<UserResponse | null>> => {
     try {
       const existingUser = await userRepository.findByEmailAsync(user.email);
 
