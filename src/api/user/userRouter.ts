@@ -32,7 +32,7 @@ export const userRouter: Router = (() => {
     path: '/users/{id}',
     tags: ['User'],
     request: { params: GetUserSchema.shape.params },
-    responses: createApiResponse(UserCompleteSchema, 'Success'),
+    responses: createApiResponse(UserResponseSchema, 'Success'),
   });
 
   router.get('/:id', validateRequest(GetUserSchema), async (req: Request, res: Response) => {

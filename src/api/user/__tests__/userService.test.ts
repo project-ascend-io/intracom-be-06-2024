@@ -1,4 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
+import mongoose from 'mongoose';
 import { describe, expect, it, Mock, vi } from 'vitest';
 
 import { userRepository } from '@/api/user/userRepository';
@@ -16,22 +17,18 @@ vi.mock('@/server', () => ({
 describe('userService', () => {
   const mockUsers: User[] = [
     {
-      id: '1',
+      _id: new mongoose.mongo.ObjectId(),
       username: 'Alice',
       email: 'alice@example.com',
-      organization: 'Example Corp.',
+      organization: new mongoose.mongo.ObjectId(),
       password: 'Testing123!',
-      createdAt: new Date(),
-      updatedAt: new Date(),
     },
     {
-      id: '2',
+      _id: new mongoose.mongo.ObjectId(),
       username: 'Bob',
       email: 'bob@example.com',
-      organization: 'Example Corp.',
+      organization: new mongoose.mongo.ObjectId(),
       password: 'Testing123!',
-      createdAt: new Date(),
-      updatedAt: new Date(),
     },
   ];
 
@@ -82,12 +79,12 @@ describe('userService', () => {
   describe('findById', () => {
     it('returns a user for a valid ID', async () => {
       // Arrange
-      const testId = '1';
-      const mockUser = mockUsers.find((user) => user.id === testId);
+      const testId = mockUsers['1']._id;
+      const mockUser = mockUsers.find((user) => user._id === testId);
       (userRepository.findByIdAsync as Mock).mockReturnValue(mockUser);
 
       // Act
-      const result = await userService.findById(testId);
+      const result = await userService.findById(testId.toString());
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.OK);
@@ -98,11 +95,11 @@ describe('userService', () => {
 
     it('handles errors for findByIdAsync', async () => {
       // Arrange
-      const testId = '1';
+      const testId = mockUsers['1']._id;
       (userRepository.findByIdAsync as Mock).mockRejectedValue(new Error('Database error'));
 
       // Act
-      const result = await userService.findById(testId);
+      const result = await userService.findById(testId.toString());
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.INTERNAL_SERVER_ERROR);
@@ -113,11 +110,11 @@ describe('userService', () => {
 
     it('returns a not found error for non-existent ID', async () => {
       // Arrange
-      const testId = '1';
+      const testId = mockUsers['1']._id;
       (userRepository.findByIdAsync as Mock).mockReturnValue(null);
 
       // Act
-      const result = await userService.findById(testId);
+      const result = await userService.findById(testId.toString());
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.NOT_FOUND);
