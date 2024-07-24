@@ -45,6 +45,7 @@ export const emailSettingsRouter: Router = (() => {
     tags: ['Email Settings'],
     responses: createApiResponse(EmailSettingsSchema, 'Success'),
     request: {
+      params: GetEmailSettingsSchema.shape.params,
       body: createPostBodyParams(NewEmailSettingsSchema),
     },
   });
@@ -58,7 +59,10 @@ export const emailSettingsRouter: Router = (() => {
     method: 'post',
     path: '/organizations/{id}/email-settings/test',
     tags: ['Email Settings'],
-    request: { body: createPostBodyParams(EmailSettingsTestSchema) },
+    request: {
+      params: GetEmailSettingsSchema.shape.params,
+      body: createPostBodyParams(EmailSettingsTestSchema),
+    },
     responses: createApiResponse(nullType, 'success'),
   });
 
