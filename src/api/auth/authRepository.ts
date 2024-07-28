@@ -1,11 +1,10 @@
-import { mongoDatabase } from "@/api/mongoDatabase";
-import { User, UserResponse } from "@/api/user/userSchema";
-import { userRepository } from "@/api/user/userRepository";
-import { UserModel } from "@/api/user/userModel";
-import { LoginCredentials } from "@/api/auth/authValidation";
-import bcrypt from "bcryptjs";
-import request from "supertest";
-import { app } from "@/server";
+import { compare } from 'bcryptjs';
+
+import { LoginCredentials } from '@/api/auth/authValidation';
+import { mongoDatabase } from '@/api/mongoDatabase';
+import { UserModel } from '@/api/user/userModel';
+import { userRepository } from '@/api/user/userRepository';
+import { UserResponse } from '@/api/user/userSchema';
 
 export const authRepository = {
   startConnection: async () => {
@@ -13,15 +12,21 @@ export const authRepository = {
   },
   login: async (credentials: LoginCredentials): Promise<UserResponse | null> => {
     try {
+      console.log('Credentials: ', credentials);
       await userRepository.startConnection();
       const foundUser = await UserModel.findOne({
         email: credentials.email,
-        password: credentials.password,
       }).populate('organization');
 
       if (!foundUser) {
         return null;
       }
+
+      const isValidPassword = await compare(credentials.password, foundUser.password);
+      if (!isValidPassword) {
+        return null;
+      }
+
       return {
         _id: foundUser._id,
         email: foundUser.email,

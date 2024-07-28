@@ -2,14 +2,12 @@ import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import express, { Request, Response, Router } from 'express';
 import { z } from 'zod';
 
+import { authService } from '@/api/auth/authService';
 import { LoginSchema } from '@/api/auth/authValidation';
 import { UserResponseSchema } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
-import { createApiResponse } from '@/api-docs/openAPIResponseBuilders';
+import { createApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '@/common/utils/httpHandlers';
-import { authService } from "@/api/auth/authService";
-import request from "supertest";
-import { app } from "@/server";
 
 export const authRegistry = new OpenAPIRegistry();
 
@@ -22,12 +20,15 @@ export const authRouter: Router = (() => {
     method: 'post',
     path: '/auth/login',
     tags: ['Authentication'],
+    request: {
+      body: createPostBodyParams(LoginSchema.shape.body),
+    },
     responses: createApiResponse(UserResponseSchema, 'Success'),
   });
 
   router.post('/login', validateRequest(LoginSchema), async (_req: Request, res: Response) => {
-
     const credentials = LoginSchema.shape.body.parse({ ..._req.body });
+    console.log('Credentials: ', credentials);
     const serviceResponse = await authService.login(credentials);
     handleServiceResponse(serviceResponse, res);
   });

@@ -1,16 +1,13 @@
-import { LoginCredentials } from "@/api/auth/authValidation";
-import { User, UserResponse } from "@/api/user/userSchema";
-import { logger } from "@/server";
-import { ResponseStatus, ServiceResponse } from "@/common/models/serviceResponse";
-import { StatusCodes } from "http-status-codes";
-import bcrypt from "bcryptjs";
-import { authRepository } from "@/api/auth/authRepository";
+import { StatusCodes } from 'http-status-codes';
+
+import { authRepository } from '@/api/auth/authRepository';
+import { LoginCredentials } from '@/api/auth/authValidation';
+import { UserResponse } from '@/api/user/userSchema';
+import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 
 export const authService = {
   login: async (credentials: LoginCredentials): Promise<ServiceResponse<UserResponse | null>> => {
-    const salt = await bcrypt.genSalt(10);
-    const encryptedPassword = await bcrypt.hash(credentials.password, salt);
-    const foundUser = await authRepository.login({ ...credentials, password: encryptedPassword });
+    const foundUser = await authRepository.login(credentials);
     if (!foundUser) {
       return new ServiceResponse(ResponseStatus.Failed, 'Invalid Credentials', null, StatusCodes.UNAUTHORIZED);
     }
