@@ -1,16 +1,13 @@
+import bcrypt from 'bcryptjs';
 import { StatusCodes } from 'http-status-codes';
+import mongoose from 'mongoose';
 import request from 'supertest';
-import { describe, expect, it } from 'vitest';
-
-import { ResponseStatus, ServiceResponse } from "@/common/models/serviceResponse";
-import { app } from '@/server';
-
 import { afterEach, beforeEach, describe, expect, it, Mock, TestContext, vi } from 'vitest';
-import { User, UserResponse } from "@/api/user/userSchema";
-import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
-import { userService } from "@/api/user/userService";
-import { authService } from "@/api/auth/authService";
+
+import { authService } from '@/api/auth/authService';
+import { User, UserResponse } from '@/api/user/userSchema';
+import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
+import { app } from '@/server';
 
 vi.mock('../authService', () => ({
   authService: {
@@ -37,7 +34,7 @@ describe('Authentication API endpoints', () => {
         username: prefix,
         organization: {
           _id: new mongoose.mongo.ObjectId().toString(),
-          name: `Ebook Store #${i}`
+          name: `Ebook Store #${i}`,
         },
         password: encryptedPassword,
         role: 'Admin',
@@ -91,8 +88,8 @@ describe('Authentication API endpoints', () => {
         role: selectedUser.role,
         organization: {
           _id: selectedUser.organization._id,
-          name: selectedUser.organization.name
-        }
+          name: selectedUser.organization.name,
+        },
       };
       const responseMock = new ServiceResponse<UserResponse>(
         ResponseStatus.Success,
