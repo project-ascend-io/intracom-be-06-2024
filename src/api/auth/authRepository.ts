@@ -12,7 +12,6 @@ export const authRepository = {
   },
   login: async (credentials: LoginCredentials): Promise<UserResponse | null> => {
     try {
-      console.log('Credentials: ', credentials);
       await userRepository.startConnection();
       const foundUser = await UserModel.findOne({
         email: credentials.email,
