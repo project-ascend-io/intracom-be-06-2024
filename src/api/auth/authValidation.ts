@@ -8,3 +8,5 @@ export const LoginSchema = z.object({
     password: z.string(),
   }),
 });
+
+export type LoginCredentials = z.infer<typeof LoginSchema.shape.body>;

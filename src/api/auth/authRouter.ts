@@ -7,6 +7,9 @@ import { UserResponseSchema } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
 import { createApiResponse } from '@/api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '@/common/utils/httpHandlers';
+import { authService } from "@/api/auth/authService";
+import request from "supertest";
+import { app } from "@/server";
 
 export const authRegistry = new OpenAPIRegistry();
 
@@ -23,7 +26,9 @@ export const authRouter: Router = (() => {
   });
 
   router.post('/login', validateRequest(LoginSchema), async (_req: Request, res: Response) => {
-    const serviceResponse = await userService.findById('1');
+
+    const credentials = LoginSchema.shape.body.parse({ ..._req.body });
+    const serviceResponse = await authService.login(credentials);
     handleServiceResponse(serviceResponse, res);
   });
 
@@ -43,7 +48,7 @@ export const authRouter: Router = (() => {
     method: 'post',
     path: '/auth/logout',
     tags: ['Authentication'],
-    responses: createApiResponse(z.object({}), 'Success'),
+    responses: createApiResponse(z.null(), 'Success'),
   });
 
   router.post('/logout', async (_req: Request, res: Response) => {
