@@ -3,6 +3,7 @@ import express, { Express } from 'express';
 import helmet from 'helmet';
 import { pino } from 'pino';
 
+import { authRouter } from '@/api/auth/authRouter';
 import { emailSettingsRouter } from '@/api/emailSettings/emailSettingsRouter';
 import { healthCheckRouter } from '@/api/healthCheck/healthCheckRouter';
 import { organizationRouter } from '@/api/organization/organizationRouter';
@@ -31,6 +32,7 @@ app.use(rateLimiter);
 app.use(requestLogger);
 
 // Routes
+app.use('/auth', authRouter);
 app.use('/health-check', healthCheckRouter);
 app.use('/organizations', organizationRouter);
 app.use('/users', userRouter);
