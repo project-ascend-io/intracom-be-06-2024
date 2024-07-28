@@ -26,13 +26,13 @@ export const userService = {
     }
   },
 
-  findById: async (id: string): Promise<ServiceResponse<User | null>> => {
+  findById: async (id: string): Promise<ServiceResponse<UserResponse | null>> => {
     try {
       const user = await userRepository.findByIdAsync(id);
       if (!user) {
         return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
       }
-      return new ServiceResponse<User>(ResponseStatus.Success, 'User found', user, StatusCodes.OK);
+      return new ServiceResponse<UserResponse>(ResponseStatus.Success, 'User found', user, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding user with id ${id}:, ${(ex as Error).message}`;
       logger.error(errorMessage);

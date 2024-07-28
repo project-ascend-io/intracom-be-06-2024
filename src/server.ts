@@ -36,10 +36,9 @@ app.use('/auth', authRouter);
 app.use('/health-check', healthCheckRouter);
 app.use('/organizations', organizationRouter);
 app.use('/users', userRouter);
-app.use('/email-settings', emailSettingsRouter);
 
 // Swagger UI
-app.use(openAPIRouter);
+app.use('/api-docs', openAPIRouter);
 
 // Error handlers
 app.use(errorHandler());
