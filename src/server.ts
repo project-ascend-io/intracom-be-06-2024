@@ -39,7 +39,7 @@ app.use('/user-invites/email', userInviteRouter);
 app.use('/user-invites/id', userInviteRouter);
 
 // Swagger UI
-app.use(openAPIRouter);
+app.use('/api-docs', openAPIRouter);
 
 // Error handlers
 app.use(errorHandler());

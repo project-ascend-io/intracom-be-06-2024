@@ -18,10 +18,23 @@ export const userRepository = {
     }
   },
 
-  findByIdAsync: async (id: string): Promise<User | null> => {
+  findByIdAsync: async (id: string): Promise<UserResponse | null> => {
     try {
       await userRepository.startConnection();
-      return await UserModel.findById(id);
+      const user = await UserModel.findById(id).populate('organization');
+      if (!user) {
+        return null;
+      }
+
+      return {
+        _id: user._id,
+        email: user.email,
+        username: user.username,
+        organization: {
+          _id: user.organization._id,
+          name: user.organization.name,
+        },
+      };
     } catch (err) {
       console.error('[Error] findByIdAsync: ', err);
       throw err;

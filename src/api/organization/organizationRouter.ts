@@ -1,6 +1,7 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import express, { Request, Response, Router } from 'express';
 
+import { emailSettingsRouter } from '@/api/emailSettings/emailSettingsRouter';
 import { BasicOrganization, OrganizationComplete, OrganizationSchema } from '@/api/organization/organizationSchema';
 import { organizationService } from '@/api/organization/organizationService';
 import { PostOrganizationSchema } from '@/api/organization/organizationValidation';
@@ -29,6 +30,8 @@ export const organizationRouter: Router = (() => {
     const serviceResponse = await organizationService.insert(newOrg);
     return handleServiceResponse(serviceResponse, res);
   });
+
+  router.use('/:id/email-settings', emailSettingsRouter);
 
   return router;
 })();
