@@ -14,3 +14,6 @@ export const verifyAuthentication = (_req: Request, res: Response, next: NextFun
     res.status(statusCode).send(new ServiceResponse<null>(ResponseStatus.Failed, 'Unauthorized', null, statusCode));
   }
 };
+
+// user logged in -> session -> 200
+// user not logged in -> no session -> 401

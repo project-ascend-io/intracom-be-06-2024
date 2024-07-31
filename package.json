@@ -66,6 +66,7 @@
     "rimraf": "^5.0.5",
     "semantic-release": "^23.0.8",
     "supertest": "^6.3.4",
+    "supertest-session": "^5.0.1",
     "tsup": "^8.0.2",
     "tsx": "^4.7.2",
     "typescript": "^5.4.4",

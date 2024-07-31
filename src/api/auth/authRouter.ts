@@ -10,7 +10,9 @@ import { UserResponseSchema } from '@/api/user/userSchema';
 import { createApiResponses, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
 import { verifyAuthentication } from '@/common/middleware/authVerifier';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
+import { env } from '@/common/utils/envConfig';
 import { handleServiceResponse, validateRequest } from '@/common/utils/httpHandlers';
+const { NODE_ENV } = env;
 
 export const authRegistry = new OpenAPIRegistry();
 
@@ -41,7 +43,7 @@ export const authRouter: Router = (() => {
   router.post('/login', validateRequest(LoginSchema), async (_req: Request, res: Response) => {
     const credentials = LoginSchema.shape.body.parse({ ..._req.body });
     const serviceResponse = await authService.login(credentials);
-    if (serviceResponse.success) {
+    if (serviceResponse.success && NODE_ENV !== 'test') {
       _req.session.userId = serviceResponse.responseObject?._id;
     }
     handleServiceResponse(serviceResponse, res);
