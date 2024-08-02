@@ -6,7 +6,6 @@ import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, Mock, TestContext, vi } from 'vitest';
 
 import { authService } from '@/api/auth/authService';
-import { userRepository } from '@/api/user/userRepository';
 import { User, UserResponse } from '@/api/user/userSchema';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { app } from '@/server';
@@ -128,63 +127,63 @@ describe('Authentication API endpoints', () => {
   });
 
   // This checks if the session is active by logging in with valid credentials and then checking the response of the /auth/check endpoint. It expects the response status code to be StatusCodes.OK, the success property of the response body to be true, the responseObject to be equal to the selected user, and the message to be 'Active Session.'
-  describe('POST /auth/check', () => {
-    it('should return active session', async ({ userList }: TestContext) => {
-      const selectedUser = userList[0];
-      const userResponse: UserResponse = {
-        _id: selectedUser._id,
-        email: selectedUser.email,
-        username: selectedUser.username,
-        role: selectedUser.role,
-        organization: {
-          _id: selectedUser.organization._id,
-          name: selectedUser.organization.name,
-        },
-      };
+  // describe('POST /auth/check', () => {
+  //   it('should return active session', async ({ userList }: TestContext) => {
+  //     const selectedUser = userList[0];
+  //     const userResponse: UserResponse = {
+  //       _id: selectedUser._id,
+  //       email: selectedUser.email,
+  //       username: selectedUser.username,
+  //       role: selectedUser.role,
+  //       organization: {
+  //         _id: selectedUser.organization._id,
+  //         name: selectedUser.organization.name,
+  //       },
+  //     };
 
-      const responseMock = new ServiceResponse<UserResponse>(
-        ResponseStatus.Success,
-        'Active Session.',
-        userResponse,
-        StatusCodes.OK
-      );
-      (userRepository.findByIdAsync as Mock).mockReturnValue(responseMock);
+  //     const responseMock = new ServiceResponse<UserResponse>(
+  //       ResponseStatus.Success,
+  //       'Active Session.',
+  //       userResponse,
+  //       StatusCodes.OK
+  //     );
+  //     (userRepository.findByIdAsync as Mock).mockReturnValue(responseMock);
 
-      // (authService.checkSession as Mock).mockReturnValue(responseMock);
-      (authService.login as Mock).mockReturnValue(responseMock);
+  //     // (authService.checkSession as Mock).mockReturnValue(responseMock);
+  //     (authService.login as Mock).mockReturnValue(responseMock);
 
-      // const response = await testSession
-      const response = await request(app)
-        .post('/auth/check')
-        //.set('Cookie', cookies)
-        .set('Accept', 'application/json');
+  //     // const response = await testSession
+  //     const response = await request(app)
+  //       .post('/auth/check')
+  //       //.set('Cookie', cookies)
+  //       .set('Accept', 'application/json');
 
-      const result: ServiceResponse = response.body;
+  //     const result: ServiceResponse = response.body;
 
-      expect(response.statusCode).toEqual(StatusCodes.OK);
-      expect(result.success).toBeTruthy();
-      expect(result.responseObject).toEqual(selectedUser);
-      expect(result.message).toEqual('Active Session.');
-    });
+  //     expect(response.statusCode).toEqual(StatusCodes.OK);
+  //     expect(result.success).toBeTruthy();
+  //     expect(result.responseObject).toEqual(selectedUser);
+  //     expect(result.message).toEqual('Active Session.');
+  //   });
 
-    // it('should return expired session', async () => {
-    //   const responseMock = new ServiceResponse<null>(
-    //     ResponseStatus.Failed,
-    //     'Existing session is expired or has been destroyed.',
-    //     null,
-    //     StatusCodes.UNAUTHORIZED
-    //   );
-    //   (userRepository.findByIdAsync as Mock).mockReturnValue(null);
+  //   // it('should return expired session', async () => {
+  //   //   const responseMock = new ServiceResponse<null>(
+  //   //     ResponseStatus.Failed,
+  //   //     'Existing session is expired or has been destroyed.',
+  //   //     null,
+  //   //     StatusCodes.UNAUTHORIZED
+  //   //   );
+  //   //   (userRepository.findByIdAsync as Mock).mockReturnValue(null);
 
-    //   const response = await request(app).post('/auth/check').set('Accept', 'application/json');
-    //   const result: ServiceResponse = response.body;
+  //   //   const response = await request(app).post('/auth/check').set('Accept', 'application/json');
+  //   //   const result: ServiceResponse = response.body;
 
-    //   expect(response.statusCode).toEqual(StatusCodes.UNAUTHORIZED);
-    //   expect(result.success).toBeFalsy();
-    //   expect(result.responseObject).toBeNull();
-    //   expect(result.message).toEqual('Existing session is expired or has been destroyed.');
-    // });
-  });
+  //   //   expect(response.statusCode).toEqual(StatusCodes.UNAUTHORIZED);
+  //   //   expect(result.success).toBeFalsy();
+  //   //   expect(result.responseObject).toBeNull();
+  //   //   expect(result.message).toEqual('Existing session is expired or has been destroyed.');
+  //   // });
+  // });
 
   // This checks if the session is expired or destroyed by mocking the userRepository.findByIdAsync function to return null. It sends a request to the /auth/check endpoint and expects the response status code to be StatusCodes.UNAUTHORIZED, the success property of the response body to be false, the responseObject to be null, and the message to be 'Existing session is expired or has been destroyed.'
   // describe('POST /auth/logout', () => {

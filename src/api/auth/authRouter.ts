@@ -50,7 +50,7 @@ export const authRouter: Router = (() => {
   });
 
   authRegistry.registerPath({
-    method: 'post',
+    method: 'get',
     path: '/auth/check',
     tags: ['Authentication'],
     responses: createApiResponses([
@@ -67,7 +67,7 @@ export const authRouter: Router = (() => {
     ]),
   });
 
-  router.post('/check', verifyAuthentication, async (_req: Request, res: Response) => {
+  router.get('/check', verifyAuthentication, async (_req: Request, res: Response) => {
     // userId will always be found, if userId doesn't exist, it will be caught in verifyAuthentication
     const foundUser = await userRepository.findByIdAsync(_req.session.userId);
     const serviceResponse = new ServiceResponse(ResponseStatus.Success, 'Active Session.', foundUser, StatusCodes.OK);
