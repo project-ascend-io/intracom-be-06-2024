@@ -23,7 +23,6 @@ userInviteRegistry.register('User Invite', UserInviteCompleteSchema);
 export const userInviteRouter: Router = (() => {
   const router = express.Router();
 
-  //checked in Swagger
   userInviteRegistry.registerPath({
     method: 'get',
     path: '/organizations/{orgId}/user-invites',
@@ -42,7 +41,6 @@ export const userInviteRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  ///checked Swagger
   userInviteRegistry.registerPath({
     method: 'get',
     path: '/user-invites/{hash}',
@@ -57,7 +55,6 @@ export const userInviteRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  // Swagger checked
   userInviteRegistry.registerPath({
     method: 'post',
     path: '/organizations/{orgId}/user-invites',
@@ -76,7 +73,6 @@ export const userInviteRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  //swagger checked
   userInviteRegistry.registerPath({
     method: 'patch',
     path: '/organizations/{orgId}/user-invites/{id}',
@@ -100,7 +96,6 @@ export const userInviteRouter: Router = (() => {
     }
   );
 
-  //swagger checked
   userInviteRegistry.registerPath({
     method: 'patch',
     path: '/user-invites/{hash}',
@@ -119,7 +114,6 @@ export const userInviteRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  //swagger checked
   userInviteRegistry.registerPath({
     method: 'delete',
     path: '/organizations/{orgId}/user-invites/{id}',
