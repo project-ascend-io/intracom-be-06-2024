@@ -3,29 +3,46 @@ import { z } from 'zod';
 import { commonValidations } from '@/common/utils/commonValidation';
 
 export const GetUserInviteSchema = z.object({
-  params: z.object({ id: commonValidations.id }),
+  params: z.object({ orgId: z.string() }),
+  query: z.object({
+    state: commonValidations.state.optional(),
+    email: commonValidations.email.optional(),
+  }),
 });
 
-export const GetUserbyEmailInviteSchema = z.object({
-  params: z.object({ email: commonValidations.email }),
+export const GetUserInviteByHashSchema = z.object({
+  params: z.object({ hash: z.string() }),
 });
 
 export const PostUserInviteSchema = z.object({
+  params: z.object({ orgId: commonValidations.id }),
   body: z.object({
-    email: commonValidations.email,
-    organization: commonValidations.id.openapi({ example: '668d84f418a02e326034360d' }),
+    emails: z.array(commonValidations.email).nonempty({ message: 'Emails array cannot be empty' }),
   }),
 });
 
-export const UpdateUserInviteSchema = z.object({
-  params: z.object({ id: commonValidations.id }),
+export const UpdateUserInviteByHashSchema = z.object({
+  params: z.object({
+    hash: z.string(),
+  }),
   body: z.object({
-    expires_in: z.string().datetime().optional(),
     state: commonValidations.state,
-    organization: commonValidations.id.optional().openapi({ example: '668d84f418a02e326034360d' }),
-    hash: z.string().optional(),
   }),
 });
 
-export type PostUserInvite = z.infer<typeof PostUserInviteSchema.shape.body>;
-export type UpdateUserInviteSchema = z.infer<typeof UpdateUserInviteSchema.shape.body>;
+export const UpdateUserInviteByIdSchema = z.object({
+  params: z.object({
+    id: commonValidations.id.optional(),
+    orgId: commonValidations.id.optional(),
+  }),
+  body: z.object({
+    state: commonValidations.state,
+  }),
+});
+
+export const DeleteInviteByIdSchema = z.object({
+  params: z.object({
+    id: commonValidations.id.optional(),
+    orgId: commonValidations.id.optional(),
+  }),
+});

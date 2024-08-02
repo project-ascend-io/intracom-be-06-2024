@@ -8,12 +8,30 @@ export const userInviteRepository = {
     return await mongoDatabase.initConnection();
   },
 
-  findAllAsync: async (): Promise<UserInvite[]> => {
+  findUserInvitesByOrdId: async (id: string, queryParams: any): Promise<UserInvite[]> => {
     try {
       await userInviteRepository.startConnection();
-      return await UserInviteModel.find();
+      const query: any = { organization: id };
+      if (queryParams.email) {
+        query.email = queryParams.email;
+      }
+      if (queryParams.state) {
+        query.state = queryParams.state;
+      }
+
+      return await UserInviteModel.find(query);
     } catch (err) {
-      console.error('[Error] userInviteRepository - findAllAsync: ', err);
+      console.error('[Error] userInviteRepository - findUserInvitesByOrgIdAsync: ', err);
+      throw err;
+    }
+  },
+
+  findByHashAsync: async (hash: string): Promise<UserInvite | null> => {
+    try {
+      await userInviteRepository.startConnection();
+      return await UserInviteModel.findOne({ hash });
+    } catch (err) {
+      console.error('[Error] findByEmailAsync: ', err);
       throw err;
     }
   },
@@ -55,6 +73,16 @@ export const userInviteRepository = {
       return await UserInviteModel.findByIdAndUpdate(userInviteId, updateData, { new: true });
     } catch (err) {
       console.error('[Error] userInviteRepository - insert: ', err);
+      throw err;
+    }
+  },
+
+  deleteById: async (id: string): Promise<null> => {
+    try {
+      await userInviteRepository.startConnection();
+      return await UserInviteModel.findByIdAndDelete(id);
+    } catch (err) {
+      console.error('[Error] userInviteRepository - delete: ', err);
       throw err;
     }
   },

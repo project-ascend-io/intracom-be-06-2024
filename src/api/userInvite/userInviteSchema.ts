@@ -1,4 +1,5 @@
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
+import { ObjectId } from 'mongodb';
 import { z } from 'zod';
 
 import { ModelID } from '../user/userSchema';
@@ -14,6 +15,7 @@ export const UserInviteSchema = z.object({
   organization: z
     .object({
       name: z.string().openapi('Research Corp.'),
+      _id: z.instanceof(ObjectId),
     })
     .merge(ModelID),
   hash: z.string().openapi({ example: 'fc301deeccdf7b70d2864674116ba4f5f9609dddcc90576d172128fbccd4b5b5' }),

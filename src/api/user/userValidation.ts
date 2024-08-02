@@ -41,9 +41,8 @@ export const PostAdminUserSchema = z.object({
 export const PostUserSchema = z.object({
   body: z
     .object({
-      email: commonValidations.email,
+      hash: z.string(),
       username: z.string().min(5).openapi({ example: 'johndoe' }),
-      organization: commonValidations.id.openapi({ example: '668d84f418a02e326034360d' }),
       password: commonValidations.password,
     })
     .superRefine(({ password }, checkPassComplexity) => {

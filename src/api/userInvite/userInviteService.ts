@@ -5,10 +5,10 @@ import { StatusCodes } from 'http-status-codes';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { logger } from '@/server';
 
+import { organizationRepository } from '../organization/organizationRepository';
 import { inviteState } from './userInviteModel';
 import { userInviteRepository } from './userInviteRepository';
 import { UserInvite } from './userInviteSchema';
-import { PostUserInvite } from './userInviteValidation';
 
 const generateHash = (inputString: string) => {
   const hash = crypto.createHash('sha256');
@@ -22,75 +22,81 @@ const generateExpDate = () => {
   const expDate = new Date(currentDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
   return expDate.toISOString();
 };
+export const isValid = (expirationDate: string) => {
+  return new Date(expirationDate) > new Date();
+};
+
+const setStateParams = (userInviteParams: any, userInvite: UserInvite) => {
+  if (userInviteParams.state == inviteState.Accepted && !isValid(userInvite.expires_in)) {
+    userInviteParams.state = inviteState.Expired;
+  } else if (userInviteParams.state == inviteState.Denied) {
+    userInviteParams.hash = '';
+    userInviteParams.expires_in = '';
+  } else if (userInviteParams.state == inviteState.Pending) {
+    const newStr = randomBytes(10).toString('hex');
+    userInviteParams.hash = generateHash(userInviteParams.email + newStr);
+    userInviteParams.expires_in = generateExpDate();
+  }
+  return userInviteParams;
+};
 
 export const userInviteService = {
-  get: async (): Promise<ServiceResponse<UserInvite[] | null>> => {
+  getInvitesByOrgId: async (id: string, queryParams: any): Promise<ServiceResponse<UserInvite[] | null>> => {
     try {
-      const userInvites: UserInvite[] = await userInviteRepository.findAllAsync();
-      if (!userInvites) {
-        return new ServiceResponse(ResponseStatus.Failed, 'No User Invites found', null, StatusCodes.NOT_FOUND);
+      const userInvites = await userInviteRepository.findUserInvitesByOrdId(id, queryParams);
+      if (userInvites.length == 0) {
+        return new ServiceResponse(ResponseStatus.Success, 'User Invites not found', null, StatusCodes.OK);
       }
       return new ServiceResponse<UserInvite[]>(
         ResponseStatus.Success,
-        'User Invites found',
+        'User Invites Found',
         userInvites,
         StatusCodes.OK
       );
     } catch (ex) {
-      const errorMessage = `Error finding all users: $${(ex as Error).message}`;
+      const errorMessage = `Error finding all user invites: $${(ex as Error).message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
 
-  findById: async (id: string): Promise<ServiceResponse<UserInvite | null>> => {
+  insertInvites: async (
+    organizationId: string,
+    userEmails: string[]
+  ): Promise<ServiceResponse<UserInvite[] | null>> => {
+    const createdInvites: UserInvite[] = [];
     try {
-      const userInvite = await userInviteRepository.findByIdAsync(id);
-      if (!userInvite) {
-        return new ServiceResponse(ResponseStatus.Failed, 'User Invite not found', null, StatusCodes.NOT_FOUND);
+      const organization = await organizationRepository.findByIdAsync(organizationId);
+      if (!organization) {
+        return new ServiceResponse(ResponseStatus.Failed, 'Organization not found', null, StatusCodes.NOT_FOUND);
       }
-      return new ServiceResponse<UserInvite>(ResponseStatus.Success, 'User Invite found', userInvite, StatusCodes.OK);
-    } catch (ex) {
-      const errorMessage = `Error finding user with id ${id}:, ${(ex as Error).message}`;
-      logger.error(errorMessage);
-      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
-    }
-  },
-
-  findByEmail: async (email: string): Promise<ServiceResponse<UserInvite | null>> => {
-    try {
-      const userInvite = await userInviteRepository.findByEmailAsync(email);
-      if (!userInvite) {
-        return new ServiceResponse(ResponseStatus.Failed, 'User Invite not found', null, StatusCodes.NOT_FOUND);
+      for (const email of userEmails) {
+        const existingUserInvite = await userInviteRepository.findByEmailAsync(email);
+        if (existingUserInvite) {
+          return new ServiceResponse(
+            ResponseStatus.Failed,
+            'User Invite already exists',
+            null,
+            StatusCodes.UNPROCESSABLE_ENTITY
+          );
+        }
       }
-      return new ServiceResponse<UserInvite>(ResponseStatus.Success, 'User Invite found', userInvite, StatusCodes.OK);
-    } catch (ex) {
-      const errorMessage = `Error finding user with email ${email}:, ${(ex as Error).message}`;
-      logger.error(errorMessage);
-      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
-    }
-  },
-
-  insert: async (userInvite: PostUserInvite): Promise<ServiceResponse<UserInvite | null>> => {
-    try {
-      const existingUserInvite = await userInviteRepository.findByEmailAsync(userInvite.email);
-
-      if (existingUserInvite) {
-        return new ServiceResponse(ResponseStatus.Failed, 'User Invite already exists', null, StatusCodes.BAD_REQUEST);
+      for (const email of userEmails) {
+        const newUserInvite: UserInvite = {
+          email: email,
+          state: inviteState.Pending,
+          organization: organizationId,
+          hash: generateHash(email),
+          expires_in: generateExpDate(),
+        };
+        const savedUserInvite = await userInviteRepository.insert(newUserInvite);
+        createdInvites.push(savedUserInvite);
       }
 
-      const savedUserInvite = await userInviteRepository.insert({
-        email: userInvite.email,
-        state: inviteState.Pending,
-        organization: userInvite.organization,
-        hash: generateHash(userInvite.email),
-        expires_in: generateExpDate(),
-      });
-
-      return new ServiceResponse<UserInvite>(
+      return new ServiceResponse<UserInvite[]>(
         ResponseStatus.Success,
-        'User invite created.',
-        savedUserInvite,
+        'User invites created.',
+        createdInvites,
         StatusCodes.CREATED
       );
     } catch (err) {
@@ -101,31 +107,25 @@ export const userInviteService = {
     }
   },
 
-  update: async (id: string, userInviteParams: any): Promise<ServiceResponse<UserInvite | null>> => {
-    const isValid = (expirationDate: string) => {
-      return new Date(expirationDate) > new Date();
-    };
-
+  updateById: async (id: string, orgId: string, userInviteParams: any): Promise<ServiceResponse<UserInvite | null>> => {
     try {
+      const organization = await organizationRepository.findByIdAsync(orgId);
+      if (!organization) {
+        return new ServiceResponse(ResponseStatus.Failed, 'Organization not found', null, StatusCodes.NOT_FOUND);
+      }
+
       const userInvite = await userInviteRepository.findByIdAsync(id);
       if (!userInvite) {
-        return new ServiceResponse(ResponseStatus.Failed, 'User Invite not found', null, StatusCodes.BAD_REQUEST);
+        return new ServiceResponse(ResponseStatus.Failed, 'User Invite not found', null, StatusCodes.NOT_FOUND);
       }
       if ('state' in userInviteParams) {
-        if (userInviteParams.state == inviteState.Accepted && !isValid(userInvite.expires_in)) {
-          userInviteParams.state = inviteState.Expired;
-          return new ServiceResponse(ResponseStatus.Failed, 'User Invite expired', null, StatusCodes.BAD_REQUEST);
-        } else if (userInviteParams.state == inviteState.Denied) {
-          userInviteParams.hash = '';
-          userInviteParams.expires_in = '';
-        } else if (userInviteParams.state == inviteState.Pending) {
-          const newStr = randomBytes(10).toString('hex');
-          userInviteParams.hash = generateHash(userInviteParams.email + newStr);
-          userInviteParams.expires_in = generateExpDate();
-        }
+        userInviteParams = setStateParams(userInviteParams, userInvite);
       }
-
       const savedUserInvite = await userInviteRepository.update(id, userInviteParams);
+
+      if ('state' in userInviteParams && userInviteParams.state == inviteState.Expired) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User Invite expired', null, StatusCodes.BAD_REQUEST);
+      }
 
       return new ServiceResponse<UserInvite | null>(
         ResponseStatus.Success,
@@ -136,6 +136,93 @@ export const userInviteService = {
     } catch (err) {
       console.log(err);
       const errorMessage = `[Error] insert service: , ${(err as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  updateByHash: async (hash: string, userInviteParams: any): Promise<ServiceResponse<UserInvite | null>> => {
+    try {
+      const userInvite = await userInviteRepository.findByHashAsync(hash);
+      if (!userInvite) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User Invite not found', null, StatusCodes.NOT_FOUND);
+      }
+      if ('state' in userInviteParams) {
+        userInviteParams = setStateParams(userInviteParams, userInvite);
+      }
+      const savedUserInvite = await userInviteRepository.update(userInvite._id, userInviteParams);
+
+      if ('state' in userInviteParams && userInviteParams.state == inviteState.Expired) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User Invite expired', null, StatusCodes.BAD_REQUEST);
+      }
+
+      return new ServiceResponse<UserInvite | null>(
+        ResponseStatus.Success,
+        'User invite updated.',
+        savedUserInvite,
+        StatusCodes.OK
+      );
+    } catch (err) {
+      console.log(err);
+      const errorMessage = `[Error] insert service: , ${(err as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  getByhash: async (hash: string): Promise<ServiceResponse<UserInvite | null>> => {
+    try {
+      const userInvite = await userInviteRepository.findByHashAsync(hash);
+      if (!userInvite) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User Invite not found', null, StatusCodes.NOT_FOUND);
+      }
+      const orgId = userInvite.organization._id;
+      console.log('ORGID', orgId);
+      const organization = await organizationRepository.findByIdAsync(orgId);
+      console.log('ORG', organization);
+      const userInviteResponse = {
+        _id: userInvite._id,
+        email: userInvite.email,
+        state: userInvite.state,
+        organization: {
+          _id: organization?._id,
+          name: organization?.name,
+        },
+        expires_in: userInvite.expires_in,
+        hash: userInvite.hash,
+      };
+
+      return new ServiceResponse<any | null>(
+        ResponseStatus.Success,
+        'User invite found.',
+        userInviteResponse,
+        StatusCodes.OK
+      );
+    } catch (err) {
+      console.log(err);
+      const errorMessage = `[Error] insert service: , ${(err as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  deleteById: async (id: string, orgId: string): Promise<ServiceResponse<null>> => {
+    try {
+      const organization = await organizationRepository.findByIdAsync(orgId);
+      if (!organization) {
+        return new ServiceResponse(ResponseStatus.Failed, 'Organization not found', null, StatusCodes.NOT_FOUND);
+      }
+      const userInvite = await userInviteRepository.findByIdAsync(id);
+      if (!userInvite) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User Invite not found', null, StatusCodes.NOT_FOUND);
+      }
+
+      await userInviteRepository.deleteById(id);
+
+      return new ServiceResponse<null>(ResponseStatus.Success, '', null, StatusCodes.NO_CONTENT);
+    } catch (err) {
+      console.log(err);
+      const errorMessage = `[Error] delete service: , ${(err as Error).message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }

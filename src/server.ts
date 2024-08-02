@@ -35,8 +35,7 @@ app.use('/health-check', healthCheckRouter);
 app.use('/organizations', organizationRouter);
 app.use('/users', userRouter);
 app.use('/user-invites', userInviteRouter);
-app.use('/user-invites/email', userInviteRouter);
-app.use('/user-invites/id', userInviteRouter);
+app.use('/organizations', userInviteRouter);
 
 // Swagger UI
 app.use('/api-docs', openAPIRouter);

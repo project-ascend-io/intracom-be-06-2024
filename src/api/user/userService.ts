@@ -1,7 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { StatusCodes } from 'http-status-codes';
 import jwt from 'jsonwebtoken';
-import { ObjectId } from 'mongodb';
 
 import { organizationRepository } from '@/api/organization/organizationRepository';
 import { userRepository } from '@/api/user/userRepository';
@@ -11,6 +10,8 @@ import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse
 import { env } from '@/common/utils/envConfig';
 import { logger } from '@/server';
 
+import { userInviteRepository } from '../userInvite/userInviteRepository';
+import { isValid } from '../userInvite/userInviteService';
 import { userRoles } from './userModel';
 
 export const userService = {
@@ -45,10 +46,17 @@ export const userService = {
 
   insertUser: async (user: PostUser, role: userRoles): Promise<ServiceResponse<UserResponse | null>> => {
     try {
-      const existingUser = await userRepository.findByEmailAsync(user.email);
+      const userInvite = await userInviteRepository.findByHashAsync(user.hash);
+      if (!userInvite) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User invite not found', null, StatusCodes.UNAUTHORIZED);
+      }
+      if (!isValid(userInvite.expires_in)) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User invite expired', null, StatusCodes.UNAUTHORIZED);
+      }
 
+      const existingUser = await userRepository.findByEmailAsync(userInvite.email);
       if (existingUser) {
-        return new ServiceResponse(ResponseStatus.Failed, 'User already exists', null, StatusCodes.BAD_REQUEST);
+        return new ServiceResponse(ResponseStatus.Failed, `User already exists`, null, StatusCodes.UNAUTHORIZED);
       }
 
       // legacy code from signup method that was removed
@@ -58,9 +66,9 @@ export const userService = {
       const savedUser = await userRepository
         .insertUser({
           username: user.username,
-          email: user.email,
+          email: userInvite.email,
           password: hashedPassword,
-          organization: new ObjectId(user.organization),
+          organization: userInvite.organization._id,
           role,
         })
         .catch((err) => {
