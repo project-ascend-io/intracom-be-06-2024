@@ -176,10 +176,12 @@ export const userInviteService = {
       if (!userInvite) {
         return new ServiceResponse(ResponseStatus.Failed, 'User Invite not found', null, StatusCodes.NOT_FOUND);
       }
+
+      if (!isValid(userInvite.expires_in)) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User invitation has expired', null, StatusCodes.GONE);
+      }
       const orgId = userInvite.organization._id;
-      console.log('ORGID', orgId);
       const organization = await organizationRepository.findByIdAsync(orgId);
-      console.log('ORG', organization);
       const userInviteResponse = {
         _id: userInvite._id,
         email: userInvite.email,

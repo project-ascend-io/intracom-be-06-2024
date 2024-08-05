@@ -86,6 +86,13 @@ export const userService = {
         role: savedUser.role,
       };
 
+      /// removing exp date and hash for User Invite for security reasons after User has created an account
+      const userInviteParams: any = {
+        expires_in: '',
+        hash: '',
+      };
+      await userInviteRepository.update(userInvite._id, userInviteParams);
+
       // legacy code from signup method that was removed.
       const payload = { id: savedUser._id };
       const { JWT_SECRET } = env;
