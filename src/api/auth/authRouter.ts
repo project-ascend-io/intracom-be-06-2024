@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { authService } from '@/api/auth/authService';
 import { LoginSchema } from '@/api/auth/authValidation';
 import { userRepository } from '@/api/user/userRepository';
-import { UserResponseSchema } from '@/api/user/userSchema';
+import { UserAuthResponse, UserAuthResponseSchema, UserResponse, UserResponseSchema } from '@/api/user/userSchema';
 import { createApiResponses, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
 import { verifyAuthentication } from '@/common/middleware/authVerifier';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
@@ -28,7 +28,7 @@ export const authRouter: Router = (() => {
     },
     responses: createApiResponses([
       {
-        schema: UserResponseSchema,
+        schema: UserAuthResponseSchema,
         statusCode: StatusCodes.OK,
         description: 'Successfully logged in.',
       },
@@ -45,6 +45,11 @@ export const authRouter: Router = (() => {
     const serviceResponse = await authService.login(credentials);
     if (serviceResponse.success && NODE_ENV !== 'test') {
       _req.session.userId = serviceResponse.responseObject?._id;
+      const authUser: UserAuthResponse = {
+        ...(serviceResponse.responseObject as UserResponse),
+        expires: _req.session.cookie.expires!.toISOString(),
+      };
+      serviceResponse.responseObject = authUser;
     }
     handleServiceResponse(serviceResponse, res);
   });
@@ -55,7 +60,7 @@ export const authRouter: Router = (() => {
     tags: ['Authentication'],
     responses: createApiResponses([
       {
-        schema: UserResponseSchema,
+        schema: UserAuthResponseSchema,
         statusCode: StatusCodes.OK,
         description: 'Existing session is active and not expired.',
       },
@@ -70,7 +75,11 @@ export const authRouter: Router = (() => {
   router.get('/check', verifyAuthentication, async (_req: Request, res: Response) => {
     // userId will always be found, if userId doesn't exist, it will be caught in verifyAuthentication
     const foundUser = await userRepository.findByIdAsync(_req.session.userId);
-    const serviceResponse = new ServiceResponse(ResponseStatus.Success, 'Active Session.', foundUser, StatusCodes.OK);
+    const authUser: UserAuthResponse = {
+      ...(foundUser as UserResponse),
+      expires: _req.session.cookie.expires!.toISOString(),
+    };
+    const serviceResponse = new ServiceResponse(ResponseStatus.Success, 'Active Session.', authUser, StatusCodes.OK);
     handleServiceResponse(serviceResponse, res);
   });
 

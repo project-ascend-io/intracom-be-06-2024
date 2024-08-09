@@ -12,8 +12,7 @@ const sessionStore = MongoStore.create({
 
 export const sessionConfiguration = session({
   secret: SESSION_SECRET as string,
-  resave: true,
-  rolling: true,
+  resave: false,
   saveUninitialized: false,
   store: sessionStore,
   cookie: {

@@ -33,7 +33,13 @@ export const UserResponseSchema = z
   })
   .merge(ModelID);
 
+export const SessionExpirationSchema = z.object({
+  expires: z.string().datetime(),
+});
+
+export const UserAuthResponseSchema = UserResponseSchema.merge(SessionExpirationSchema);
 export const UserCompleteSchema = UserSchema.merge(ModelID);
 export type User = z.infer<typeof UserCompleteSchema>;
 export type BasicUser = z.infer<typeof UserSchema>;
 export type UserResponse = z.infer<typeof UserResponseSchema>;
+export type UserAuthResponse = z.infer<typeof UserAuthResponseSchema>;
