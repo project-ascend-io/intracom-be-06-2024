@@ -30,6 +30,7 @@ export const userRepository = {
         _id: user._id,
         email: user.email,
         username: user.username,
+        role: user.role,
         organization: {
           _id: user.organization._id,
           name: user.organization.name,

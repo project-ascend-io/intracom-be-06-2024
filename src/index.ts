@@ -2,8 +2,12 @@ import { env } from '@/common/utils/envConfig';
 import { app, logger } from '@/server';
 
 const server = app.listen(env.PORT, () => {
-  const { NODE_ENV, HOST, PORT } = env;
+  const { NODE_ENV, HOST, PORT, SESSION_SECRET } = env;
   logger.info(`Server (${NODE_ENV}) running on port http://${HOST}:${PORT}`);
+
+  if (SESSION_SECRET) {
+    logger.info('Session Secret has been created and is working');
+  }
 });
 
 const onCloseSignal = () => {
