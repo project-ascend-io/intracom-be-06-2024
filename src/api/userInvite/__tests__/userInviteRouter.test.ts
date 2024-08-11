@@ -14,6 +14,7 @@ vi.mock('../userInviteService', () => ({
   userInviteService: {
     getInvitesByOrgId: vi.fn(),
     getByhash: vi.fn(),
+    insertInvites: vi.fn(),
   },
 }));
 
@@ -28,10 +29,9 @@ describe('User Invite API Endpoints', () => {
     const userInviteList: UserInvite[] = [];
     for (let i: number = 0; i < 10; i++) {
       const objectId = new mongoose.mongo.ObjectId();
-      const prefix = `johndoe+${i}`;
       userInviteList.push({
         _id: objectId,
-        email: prefix + '@gmail.com',
+        email: i + '@gmail.com',
         state: 'Pending',
         organization: {
           _id: new mongoose.mongo.ObjectId(),
@@ -196,5 +196,125 @@ describe('User Invite API Endpoints', () => {
     expect(response.statusCode).toEqual(StatusCodes.GONE);
     expect(responseBody.success).toBeFalsy();
     expect(responseBody.message).toContain('User Invite expired');
+  });
+
+  describe('POST /organizations/:orgId/user-invites', () => {
+    it('should create user invites for specific organization', async ({ userInviteList }: UserInviteTestContext) => {
+      // Arrange
+      const userEmails = {
+        emails: [userInviteList[0].email, userInviteList[1].email],
+      };
+
+      const orgId = userInviteList[0].organization._id;
+      const responseMock = new ServiceResponse<UserInvite[]>(
+        ResponseStatus.Success,
+        'User invites created.',
+        userInviteList.slice(0, 2),
+        StatusCodes.CREATED
+      );
+      (userInviteService.insertInvites as Mock).mockReturnValue(responseMock);
+
+      // Act
+      const response = await request(app).post(`/organizations/${orgId}/user-invites`).send(userEmails);
+      const responseBody: ServiceResponse<UserInvite[]> = response.body;
+
+      // Assert
+      expect(response.statusCode).toEqual(StatusCodes.CREATED);
+      expect(responseBody.success).toBeTruthy();
+      expect(responseBody.message).toContain('User invites created');
+    }),
+      it('should return error if the email already exists', async ({ userInviteList }: UserInviteTestContext) => {
+        // Arrange
+        const userEmails = {
+          emails: [userInviteList[0].email, userInviteList[1].email],
+        };
+
+        const orgId = userInviteList[0].organization._id;
+        const responseMock = new ServiceResponse<UserInvite[] | null>(
+          ResponseStatus.Failed,
+          'User Invite already exists',
+          null,
+          StatusCodes.UNPROCESSABLE_ENTITY
+        );
+        (userInviteService.insertInvites as Mock).mockReturnValue(responseMock);
+
+        // Act
+        const response = await request(app).post(`/organizations/${orgId}/user-invites`).send(userEmails);
+        const responseBody: ServiceResponse<UserInvite[]> = response.body;
+
+        // Assert
+        expect(response.statusCode).toEqual(StatusCodes.UNPROCESSABLE_ENTITY);
+        expect(responseBody.success).toBeFalsy();
+        expect(responseBody.message).toContain('User Invite already exists');
+      }),
+      it('should return error if the emails array is empty', async ({ userInviteList }: UserInviteTestContext) => {
+        // Arrange
+        const userEmails = {
+          emails: [],
+        };
+
+        const orgId = userInviteList[0].organization._id;
+        const responseMock = new ServiceResponse<UserInvite[] | null>(
+          ResponseStatus.Failed,
+          'Invalid input: Emails Emails array cannot be empty.',
+          null,
+          StatusCodes.BAD_REQUEST
+        );
+        (userInviteService.insertInvites as Mock).mockReturnValue(responseMock);
+
+        // Act
+        const response = await request(app).post(`/organizations/${orgId}/user-invites`).send(userEmails);
+        const responseBody: ServiceResponse<UserInvite[]> = response.body;
+
+        // Assert
+        expect(response.statusCode).toEqual(StatusCodes.BAD_REQUEST);
+        expect(responseBody.success).toBeFalsy();
+        expect(responseBody.message).toContain('Emails array cannot be empty');
+      }),
+      it('should return error if the organization is not found', async ({ userInviteList }: UserInviteTestContext) => {
+        // Arrange
+        const userEmails = {
+          emails: [userInviteList[0].email, userInviteList[1].email],
+        };
+
+        const orgId = userInviteList[0].organization._id;
+        const responseMock = new ServiceResponse<UserInvite[] | null>(
+          ResponseStatus.Failed,
+          'Organization not found.',
+          null,
+          StatusCodes.NOT_FOUND
+        );
+        (userInviteService.insertInvites as Mock).mockReturnValue(responseMock);
+
+        // Act
+        const response = await request(app).post(`/organizations/${orgId}/user-invites`).send(userEmails);
+        const responseBody: ServiceResponse<UserInvite[]> = response.body;
+
+        // Assert
+        expect(response.statusCode).toEqual(StatusCodes.NOT_FOUND);
+        expect(responseBody.success).toBeFalsy();
+        expect(responseBody.message).toContain('Organization not found.');
+      }),
+      it('should return error if emails is missing in body request', async ({
+        userInviteList,
+      }: UserInviteTestContext) => {
+        const orgId = userInviteList[0].organization._id;
+        const responseMock = new ServiceResponse<UserInvite[] | null>(
+          ResponseStatus.Failed,
+          'Invalid input: Emails Required.',
+          null,
+          StatusCodes.BAD_REQUEST
+        );
+        (userInviteService.insertInvites as Mock).mockReturnValue(responseMock);
+
+        // Act
+        const response = await request(app).post(`/organizations/${orgId}/user-invites`);
+        const responseBody: ServiceResponse<UserInvite[]> = response.body;
+
+        // Assert
+        expect(response.statusCode).toEqual(StatusCodes.BAD_REQUEST);
+        expect(responseBody.success).toBeFalsy();
+        expect(responseBody.message).toContain('Invalid input: Emails Required.');
+      });
   });
 });

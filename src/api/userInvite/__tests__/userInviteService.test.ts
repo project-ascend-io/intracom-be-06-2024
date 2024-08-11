@@ -172,6 +172,79 @@ describe('userInviteService', () => {
       expect(result.success).toBeFalsy();
       expect(result.message).toContain('User invitation has expired');
       expect(result.responseObject).toEqual(null);
+    }),
+      it('returns user invite expired', async () => {
+        // Arrange
+        const testHash = mockUserInvites[1].hash;
+        const mockUserInvite = mockUserInvites.find((userInvite) => userInvite.hash === testHash);
+
+        (userInviteRepository.findByHashAsync as Mock).mockReturnValue(mockUserInvite);
+        (organizationRepository.findByIdAsync as Mock).mockReturnValue(null);
+
+        // Act
+        const result = await userInviteService.getByhash(testHash);
+
+        // Assert
+        expect(result.statusCode).toEqual(StatusCodes.GONE);
+        expect(result.success).toBeFalsy();
+        expect(result.message).toContain('User invitation has expired');
+        expect(result.responseObject).toEqual(null);
+      });
+  }),
+    describe('insertInvites', () => {
+      it('creates and returns user invites', async () => {
+        // Arrange
+        const userEmails = [mockUserInvites[0].email, mockUserInvites[1].email];
+
+        const orgId = mockUserInvites[0].organization._id;
+        (organizationRepository.findByIdAsync as Mock).mockReturnValue(mockUserInvites[0].organization);
+
+        (userInviteRepository.insert as Mock).mockReturnValue(mockUserInvites);
+
+        // Act
+        const result = await userInviteService.insertInvites(orgId.toString(), userEmails);
+
+        // Assert
+        expect(result.statusCode).toEqual(StatusCodes.CREATED);
+        expect(result.success).toBeTruthy();
+        expect(result.message).toContain('User invites created.');
+        expect(result.responseObject).toContain(mockUserInvites);
+      }),
+        it('returns error if user invites already exists', async () => {
+          // Arrange
+          const userEmails = [mockUserInvites[0].email];
+
+          const orgId = mockUserInvites[0].organization._id;
+          (organizationRepository.findByIdAsync as Mock).mockReturnValue(mockUserInvites[0].organization);
+          (userInviteRepository.findByEmailAsync as Mock).mockReturnValue(userEmails[0]);
+          (userInviteRepository.insert as Mock).mockReturnValue(null);
+
+          // Act
+          const result = await userInviteService.insertInvites(orgId.toString(), userEmails);
+
+          // Assert
+          expect(result.statusCode).toEqual(StatusCodes.UNPROCESSABLE_ENTITY);
+          expect(result.success).toBeFalsy();
+          expect(result.message).toContain('User Invite already exists');
+          expect(result.responseObject).toEqual(null);
+        }),
+        it('returns error if the organization is not found', async () => {
+          // Arrange
+          const userEmails = [mockUserInvites[0].email];
+
+          const orgId = mockUserInvites[0].organization._id;
+          (organizationRepository.findByIdAsync as Mock).mockReturnValue(null);
+          (userInviteRepository.findByEmailAsync as Mock).mockReturnValue(null);
+          (userInviteRepository.insert as Mock).mockReturnValue(null);
+
+          // Act
+          const result = await userInviteService.insertInvites(orgId.toString(), userEmails);
+
+          // Assert
+          expect(result.statusCode).toEqual(StatusCodes.NOT_FOUND);
+          expect(result.success).toBeFalsy();
+          expect(result.message).toContain('Organization not found');
+          expect(result.responseObject).toEqual(null);
+        });
     });
-  });
 });
