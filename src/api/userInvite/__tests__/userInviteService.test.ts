@@ -1,0 +1,177 @@
+import { StatusCodes } from 'http-status-codes';
+import mongoose from 'mongoose';
+import { describe, expect, it, Mock, vi } from 'vitest';
+
+import { organizationRepository } from '@/api/organization/organizationRepository';
+import { userInviteRepository } from '@/api/userInvite/userInviteRepository';
+import { UserInvite } from '@/api/userInvite/userInviteSchema';
+import { userInviteService } from '@/api/userInvite/userInviteService';
+
+vi.mock('@/api/userInvite/userInviteRepository');
+vi.mock('@/api/organization/organizationRepository');
+vi.mock('@/server', () => ({
+  ...vi.importActual('@/server'),
+  logger: {
+    error: vi.fn(),
+  },
+}));
+
+describe('userInviteService', () => {
+  const mockUserInvites: UserInvite[] = [
+    {
+      _id: new mongoose.mongo.ObjectId(),
+      email: 'alice@example.com',
+      state: 'Pending',
+      organization: {
+        _id: new mongoose.mongo.ObjectId(),
+        name: 'ABC Company',
+      },
+      expires_in: '2024-08-09T01:16:20.091Z',
+      hash: '18122d114cf9a2e60b0fa55afb62aa611e664837959d0c10b8565a22bce8e44d',
+    },
+    {
+      _id: new mongoose.mongo.ObjectId(),
+      email: 'peter@example.com',
+      state: 'Accepted',
+      organization: {
+        _id: new mongoose.mongo.ObjectId(),
+        name: 'ABC Company',
+      },
+      expires_in: '2024-08-09T01:16:20.091Z',
+      hash: '18122d114cf9a2e60b0fa55afb62aa611e664837959d0c10b8565a22bce8e44d',
+    },
+  ];
+
+  describe('getInvitesByOrgId', () => {
+    it('returns all user invites by org id', async () => {
+      // Arrange
+      const testId = mockUserInvites[1].organization._id;
+      const mockOrg = mockUserInvites.find((userInvite) => userInvite.organization._id === testId);
+      (userInviteRepository.findUserInvitesByOrdId as Mock).mockReturnValue(mockUserInvites);
+
+      // Act
+      const result = await userInviteService.getInvitesByOrgId(mockOrg?._id.toString(), null);
+
+      // Assert
+      expect(result.statusCode).toEqual(StatusCodes.OK);
+      expect(result.success).toBeTruthy();
+      expect(result.message).toContain('User Invites Found');
+      expect(result.responseObject).toEqual(mockUserInvites);
+    });
+
+    it('returns user invites by org id and query params', async () => {
+      // Arrange
+      const testId = mockUserInvites[1].organization._id;
+      const mockOrg = mockUserInvites.find((userInvite) => userInvite.organization._id === testId);
+      const params = { state: 'Accepted' };
+      const userInvitesToReturn = [
+        mockUserInvites.find((userInvite) => userInvite.organization._id === testId && userInvite.state == 'Accepted'),
+      ];
+      (userInviteRepository.findUserInvitesByOrdId as Mock).mockReturnValue(userInvitesToReturn);
+
+      // Act
+      const result = await userInviteService.getInvitesByOrgId(mockOrg?._id.toString(), params);
+
+      // Assert
+      expect(result.statusCode).toEqual(StatusCodes.OK);
+      expect(result.success).toBeTruthy();
+      expect(result.message).toContain('User Invites Found');
+      expect(result.responseObject).toEqual(userInvitesToReturn);
+      expect(result.responseObject).length(1);
+    });
+
+    it('returns user invites not found for non-existent org id', async () => {
+      // Arrange
+      const testId = new mongoose.mongo.ObjectId();
+      const mockOrg = mockUserInvites.find((userInvite) => userInvite.organization._id === testId);
+      (userInviteRepository.findUserInvitesByOrdId as Mock).mockReturnValue([]);
+
+      // Act
+      const result = await userInviteService.getInvitesByOrgId(mockOrg?._id, null);
+
+      // Assert
+      expect(result.statusCode).toEqual(StatusCodes.OK);
+      expect(result.success).toBeTruthy();
+      expect(result.message).toContain('User Invites not found');
+      expect(result.responseObject).toBeNull();
+    });
+
+    it('handles errors for invalid org id', async () => {
+      // Arrange
+      const testId = '2455353';
+      (userInviteRepository.findUserInvitesByOrdId as Mock).mockRejectedValue(new Error('Database error'));
+
+      // Act
+      const result = await userInviteService.getInvitesByOrgId(testId, null);
+
+      // Assert
+      expect(result.statusCode).toEqual(StatusCodes.INTERNAL_SERVER_ERROR);
+      expect(result.success).toBeFalsy();
+      expect(result.message).toContain('Error finding all user invites');
+      expect(result.responseObject).toBeNull();
+    });
+  });
+
+  describe('getInvitesByHash', () => {
+    it('returns user invite by hash', async () => {
+      // Arrange
+      const testHash = mockUserInvites[1].hash;
+      const mockUserInvite = mockUserInvites.find((userInvite) => userInvite.hash === testHash);
+
+      if (mockUserInvite) {
+        //setting expiration date to a future date
+        mockUserInvite.expires_in = new Date(new Date().getTime() + 2).toISOString();
+      }
+
+      (userInviteRepository.findByHashAsync as Mock).mockReturnValue(mockUserInvite);
+      (organizationRepository.findByIdAsync as Mock).mockReturnValue(mockUserInvite?.organization);
+
+      // Act
+      const result = await userInviteService.getByhash(testHash);
+
+      // Assert
+      expect(result.statusCode).toEqual(StatusCodes.OK);
+      expect(result.success).toBeTruthy();
+      expect(result.message).toContain('User invite found.');
+      expect(result.responseObject).toEqual(mockUserInvite);
+
+      //return the expiration date back
+      mockUserInvite.expires_in = '2024-08-09T01:16:20.091Z';
+    });
+
+    it('returns user invite not found', async () => {
+      // Arrange
+      const testHash = '12345';
+
+      (userInviteRepository.findByHashAsync as Mock).mockReturnValue(null);
+      (organizationRepository.findByIdAsync as Mock).mockReturnValue(null);
+
+      // Act
+      const result = await userInviteService.getByhash(testHash);
+
+      // Assert
+      expect(result.statusCode).toEqual(StatusCodes.NOT_FOUND);
+      expect(result.success).toBeFalsy();
+      expect(result.message).toContain('User Invite not found');
+      expect(result.responseObject).toEqual(null);
+    });
+
+    it('returns user invite expired', async () => {
+      // Arrange
+      const testHash = mockUserInvites[1].hash;
+      const mockUserInvite = mockUserInvites.find((userInvite) => userInvite.hash === testHash);
+
+      (userInviteRepository.findByHashAsync as Mock).mockReturnValue(mockUserInvite);
+      (organizationRepository.findByIdAsync as Mock).mockReturnValue(null);
+
+      // Act
+      const result = await userInviteService.getByhash(testHash);
+
+      // Assert
+      expect(result.statusCode).toEqual(StatusCodes.GONE);
+      expect(result.success).toBeFalsy();
+      expect(result.message).toContain('User invitation has expired');
+      expect(result.responseObject).toEqual(null);
+    });
+  });
+});

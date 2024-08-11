@@ -60,6 +60,44 @@ export const userInviteService = {
     }
   },
 
+  getByhash: async (hash: string): Promise<ServiceResponse<UserInvite | null>> => {
+    try {
+      const userInvite = await userInviteRepository.findByHashAsync(hash);
+      if (!userInvite) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User Invite not found', null, StatusCodes.NOT_FOUND);
+      }
+
+      if (!isValid(userInvite.expires_in)) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User invitation has expired', null, StatusCodes.GONE);
+      }
+      const orgId = userInvite.organization._id;
+      const organization = await organizationRepository.findByIdAsync(orgId);
+      const userInviteResponse = {
+        _id: userInvite._id,
+        email: userInvite.email,
+        state: userInvite.state,
+        organization: {
+          _id: organization?._id,
+          name: organization?.name,
+        },
+        expires_in: userInvite.expires_in,
+        hash: userInvite.hash,
+      };
+
+      return new ServiceResponse<any | null>(
+        ResponseStatus.Success,
+        'User invite found.',
+        userInviteResponse,
+        StatusCodes.OK
+      );
+    } catch (err) {
+      console.log(err);
+      const errorMessage = `[Error] insert service: , ${(err as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
   insertInvites: async (
     organizationId: string,
     userEmails: string[]
@@ -160,44 +198,6 @@ export const userInviteService = {
         ResponseStatus.Success,
         'User invite updated.',
         savedUserInvite,
-        StatusCodes.OK
-      );
-    } catch (err) {
-      console.log(err);
-      const errorMessage = `[Error] insert service: , ${(err as Error).message}`;
-      logger.error(errorMessage);
-      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
-    }
-  },
-
-  getByhash: async (hash: string): Promise<ServiceResponse<UserInvite | null>> => {
-    try {
-      const userInvite = await userInviteRepository.findByHashAsync(hash);
-      if (!userInvite) {
-        return new ServiceResponse(ResponseStatus.Failed, 'User Invite not found', null, StatusCodes.NOT_FOUND);
-      }
-
-      if (!isValid(userInvite.expires_in)) {
-        return new ServiceResponse(ResponseStatus.Failed, 'User invitation has expired', null, StatusCodes.GONE);
-      }
-      const orgId = userInvite.organization._id;
-      const organization = await organizationRepository.findByIdAsync(orgId);
-      const userInviteResponse = {
-        _id: userInvite._id,
-        email: userInvite.email,
-        state: userInvite.state,
-        organization: {
-          _id: organization?._id,
-          name: organization?.name,
-        },
-        expires_in: userInvite.expires_in,
-        hash: userInvite.hash,
-      };
-
-      return new ServiceResponse<any | null>(
-        ResponseStatus.Success,
-        'User invite found.',
-        userInviteResponse,
         StatusCodes.OK
       );
     } catch (err) {

@@ -17,6 +17,7 @@ export const userInviteRepository = {
       }
       if (queryParams.state) {
         query.state = queryParams.state;
+        console.log('QUeryPARAMS REPO', queryParams);
       }
 
       return await UserInviteModel.find(query);
@@ -31,7 +32,7 @@ export const userInviteRepository = {
       await userInviteRepository.startConnection();
       return await UserInviteModel.findOne({ hash });
     } catch (err) {
-      console.error('[Error] findByEmailAsync: ', err);
+      console.error('[Error] findByHashAsync: ', err);
       throw err;
     }
   },
