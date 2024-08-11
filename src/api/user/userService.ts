@@ -1,13 +1,10 @@
-import bcrypt from 'bcryptjs';
 import { StatusCodes } from 'http-status-codes';
-import jwt from 'jsonwebtoken';
 
 import { organizationRepository } from '@/api/organization/organizationRepository';
 import { userRepository } from '@/api/user/userRepository';
 import { User, UserResponse } from '@/api/user/userSchema';
 import { PostAdminUser, PostUser } from '@/api/user/userValidation';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
-import { env } from '@/common/utils/envConfig';
 import { logger } from '@/server';
 
 import { userInviteRepository } from '../userInvite/userInviteRepository';
@@ -15,7 +12,6 @@ import { isValid } from '../userInvite/userInviteService';
 import { userRoles } from './userModel';
 
 export const userService = {
-  // Retrieves all users from the database
   findAll: async (): Promise<ServiceResponse<User[] | null>> => {
     try {
       const users = await userRepository.findAllAsync();
@@ -59,15 +55,11 @@ export const userService = {
         return new ServiceResponse(ResponseStatus.Failed, `User already exists`, null, StatusCodes.UNAUTHORIZED);
       }
 
-      // legacy code from signup method that was removed
-      const hashedPassword = await bcrypt.hash(user.password, 10);
-      /////
-
       const savedUser = await userRepository
         .insertUser({
           username: user.username,
           email: userInvite.email,
-          password: hashedPassword,
+          password: user.password,
           organization: userInvite.organization._id,
           role,
         })
@@ -91,14 +83,7 @@ export const userService = {
         expires_in: '',
         hash: '',
       };
-      await userInviteRepository.update(userInvite._id, userInviteParams);
-
-      // legacy code from signup method that was removed.
-      const payload = { id: savedUser._id };
-      const { JWT_SECRET } = env;
-      const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
-      console.log(token);
-      ////////////////
+      await userInviteRepository.update(userInvite._id.toString(), userInviteParams);
 
       return new ServiceResponse<UserResponse>(
         ResponseStatus.Success,
@@ -109,7 +94,6 @@ export const userService = {
     } catch (err) {
       console.log(err);
       const errorMessage = `Error creating new user: , ${(err as Error).message}`;
-      //const errorMessage = `[Error] userService - InsertUser: `;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
@@ -125,9 +109,6 @@ export const userService = {
       if (existingUser) {
         return new ServiceResponse(ResponseStatus.Failed, 'User already exists', null, StatusCodes.BAD_REQUEST);
       }
-      // legacy code from signup method that was removed
-      const hashedPassword = await bcrypt.hash(user.password, 10);
-      /////
 
       const savedUser = await organizationRepository
         .insert({
@@ -137,7 +118,7 @@ export const userService = {
           return await userRepository.insertUserAndOrganization({
             username: user.username,
             email: user.email,
-            password: hashedPassword,
+            password: user.password,
             organization: org._id,
             role,
           });
@@ -157,13 +138,6 @@ export const userService = {
         role: savedUser.role,
       };
 
-      // legacy code from signup method that was removed.
-      const payload = { id: savedUser._id };
-      const { JWT_SECRET } = env;
-      const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
-      console.log(token);
-      ////////////////
-
       return new ServiceResponse<UserResponse>(
         ResponseStatus.Success,
         'User and Organization created.',
@@ -173,7 +147,6 @@ export const userService = {
     } catch (err) {
       console.log(err);
       const errorMessage = `Error creating new user and organization: , ${(err as Error).message}`;
-      //const errorMessage = `[Error] userService - InsertUser: `;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
