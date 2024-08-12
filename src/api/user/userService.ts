@@ -7,7 +7,7 @@ import { userRepository } from '@/api/user/userRepository';
 import { BasicUser, User, UserResponse } from '@/api/user/userSchema';
 import { PostUser } from '@/api/user/userValidation';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
-import { logger } from '@/server';
+import logConfig from '@/common/utils/logConfig';
 
 import { userRoles } from './userModel';
 
@@ -21,7 +21,7 @@ export const userService = {
       return new ServiceResponse<User[]>(ResponseStatus.Success, 'Users found', users, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding all users: $${(ex as Error).message}`;
-      logger.error(errorMessage);
+      logConfig.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
@@ -35,7 +35,7 @@ export const userService = {
       return new ServiceResponse<UserResponse>(ResponseStatus.Success, 'User found', user, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding user with id ${id}:, ${(ex as Error).message}`;
-      logger.error(errorMessage);
+      logConfig.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
@@ -89,7 +89,7 @@ export const userService = {
       console.log(err);
       const errorMessage = `Error creating new user: , ${(err as Error).message}`;
       //const errorMessage = `[Error] userService - InsertUser: `;
-      logger.error(errorMessage);
+      logConfig.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
@@ -121,7 +121,7 @@ export const userService = {
       return new ServiceResponse(ResponseStatus.Success, 'User created.', null, StatusCodes.OK);
     } catch (err) {
       const errorMessage = `userService - Signup - Error Message: ${err}`;
-      logger.error(errorMessage);
+      logConfig.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },

@@ -1,7 +1,6 @@
 import cors from 'cors';
 import express, { Express } from 'express';
 import helmet from 'helmet';
-import { pino } from 'pino';
 
 import { authRouter } from '@/api/auth/authRouter';
 import { healthCheckRouter } from '@/api/healthCheck/healthCheckRouter';
@@ -13,9 +12,9 @@ import errorHandler from '@/common/middleware/errorHandler';
 import rateLimiter from '@/common/middleware/rateLimiter';
 import requestLogger from '@/common/middleware/requestLogger';
 import { env } from '@/common/utils/envConfig';
+import logConfig from '@/common/utils/logConfig';
 import { sessionConfiguration } from '@/common/utils/sessionConfig';
 
-const logger = pino({ name: 'server start' });
 const app: Express = express();
 
 app.use(express.json());
@@ -50,4 +49,4 @@ app.use('/api-docs', openAPIRouter);
 // Error handlers
 app.use(errorHandler());
 
-export { app, logger };
+export { app, logConfig };
