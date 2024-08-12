@@ -12,7 +12,7 @@ import errorHandler from '@/common/middleware/errorHandler';
 import rateLimiter from '@/common/middleware/rateLimiter';
 import requestLogger from '@/common/middleware/requestLogger';
 import { env } from '@/common/utils/envConfig';
-import logConfig from '@/common/utils/logConfig';
+import logger from '@/common/utils/logConfig';
 import { sessionConfiguration } from '@/common/utils/sessionConfig';
 
 const app: Express = express();
@@ -49,4 +49,4 @@ app.use('/api-docs', openAPIRouter);
 // Error handlers
 app.use(errorHandler());
 
-export { app, logConfig };
+export { app, logger };

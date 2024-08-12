@@ -1,4 +1,5 @@
 import winston from 'winston';
+import DailyRotateFile from 'winston-daily-rotate-file';
 
 import { env } from '@/common/utils/envConfig';
 
@@ -28,29 +29,37 @@ const colors = {
 
 winston.addColors(colors);
 
-const consoleFormat = winston.format.combine(
+export const consoleFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
   winston.format.colorize({ all: true }),
-  winston.format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`)
+  winston.format.printf((info) => `${info.timestamp} [${info.level.toUpperCase()}]: ${info.message}`)
 );
 
-const fileFormat = winston.format.combine(
+export const fileFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
-  winston.format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`)
+  winston.format.printf((info) => `${info.timestamp} [${info.level.toUpperCase()}]: ${info.message}`)
 );
 
 const transports = [
   new winston.transports.Console({
     format: consoleFormat,
   }),
-  new winston.transports.File({
-    filename: 'logs/error.log',
+  new DailyRotateFile({
+    filename: 'logs/error-%DATE%.log',
+    datePattern: 'YYYY-MM-DD',
     level: 'error',
     format: fileFormat,
+    maxSize: '20m',
+    maxFiles: '14d', // Retain logs for 14 days
+    zippedArchive: true, // Compress logs older than a day
   }),
-  new winston.transports.File({
-    filename: 'logs/all.log',
+  new DailyRotateFile({
+    filename: 'logs/all-%DATE%.log',
+    datePattern: 'YYYY-MM-DD',
     format: fileFormat,
+    maxSize: '20m',
+    maxFiles: '14d', // Retain logs for 14 days
+    zippedArchive: true, // Compress logs older than a day
   }),
 ];
 
