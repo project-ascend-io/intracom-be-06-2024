@@ -28,6 +28,22 @@ io.on('connection', (socket) => {
   });
 });
 
+// Socket.IO Server Connection
+const io = new Server(server, {});
+
+io.on('connection', (socket) => {
+  logger.info(`connected ${socket.id}`);
+
+  socket.on('disconnect', () => {
+    logger.info(`disconnected ${socket.id}`);
+  });
+
+  socket.on('test', (data) => {
+    logger.info(data);
+    io.emit('test:received', { message: 'test received' });
+  });
+});
+
 const onCloseSignal = () => {
   logger.info('sigint received, shutting down');
   server.close(() => {
