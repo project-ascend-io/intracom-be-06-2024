@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import { organizationRepository } from '@/api/organization/organizationRepository';
 import { BasicOrganization, Organization } from '@/api/organization/organizationSchema';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
-import { logConfig } from '@/server';
+import { logger } from '@/server';
 
 export const organizationService = {
   insert: async (newOrg: BasicOrganization): Promise<ServiceResponse<Organization | null>> => {
@@ -18,7 +18,7 @@ export const organizationService = {
       );
     } catch (err) {
       const errorMessage = `[Error] OrganizationService - insert: $${(err as Error).message}`;
-      logConfig.error(errorMessage);
+      logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },

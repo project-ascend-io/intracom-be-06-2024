@@ -8,7 +8,7 @@ import {
   NewEmailSettingsSchema,
 } from '@/api/emailSettings/emailSettingsSchema';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
-import { logConfig } from '@/server';
+import { logger } from '@/server';
 
 export const emailSettingsService = {
   findById: async (id: string): Promise<ServiceResponse<EmailSettings | null>> => {
@@ -30,7 +30,7 @@ export const emailSettingsService = {
       );
     } catch (error) {
       const errorMessage = `Error finding all email-settings: $${(error as Error).message}`;
-      logConfig.error(errorMessage);
+      logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
@@ -71,7 +71,7 @@ export const emailSettingsService = {
       }
     } catch (error) {
       const errorMessage = `emailSettingsService - ChangeEmailSettings - Error Message`;
-      logConfig.error(errorMessage);
+      logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
@@ -98,7 +98,7 @@ export const emailSettingsService = {
       }
     } catch (error) {
       const errorMessage = `emailSettingsService - TestEmailSettings - Error Message`;
-      logConfig.error(errorMessage);
+      logger.error(errorMessage);
       return new ServiceResponse<null>(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
