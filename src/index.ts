@@ -1,7 +1,7 @@
-import { Server } from 'socket.io';
-
 import { env } from '@/common/utils/envConfig';
 import { app, logger } from '@/server';
+
+import { initializeSocket } from './socket';
 
 const server = app.listen(env.PORT, () => {
   const { NODE_ENV, HOST, PORT, SESSION_SECRET } = env;
@@ -12,21 +12,8 @@ const server = app.listen(env.PORT, () => {
   }
 });
 
-// Socket.IO Server Connection
-const io = new Server(server, {});
-
-io.on('connection', (socket) => {
-  logger.info(`connected ${socket.id}`);
-
-  socket.on('disconnect', () => {
-    logger.info(`disconnected ${socket.id}`);
-  });
-
-  socket.on('test', (data) => {
-    logger.info(data);
-    io.emit('test:received', { message: 'test received' });
-  });
-});
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _io = initializeSocket(server);
 
 const onCloseSignal = () => {
   logger.info('sigint received, shutting down');
