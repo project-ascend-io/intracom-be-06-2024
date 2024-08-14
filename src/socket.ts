@@ -5,6 +5,7 @@ import { logger } from '@/server';
 
 export const initializeSocket = (server: any) => {
   const io = new Server(server, {
+    pingTimeout: 60000,
     cors: {
       origin: 'http://localhost:9000',
       methods: ['GET', 'POST'],
@@ -15,6 +16,7 @@ export const initializeSocket = (server: any) => {
     logger.info(`connected ${socket.id}`);
 
     socket.on('setup', (userData) => {
+      socket['data'] = userData;
       socket.join(userData._id);
       socket.emit('connected');
     });
@@ -37,14 +39,14 @@ export const initializeSocket = (server: any) => {
       });
     });
 
-    socket.off('setup', (userData) => {
-      logger.info('USER DISCONNECTED');
-      socket.leave(userData._id);
+    socket.on('disconnect', () => {
+      logger.info(`USER DISCONNECTED: ${socket}`);
+      socket.leave(socket.data._id);
     });
 
     socket.on('test', (data) => {
       logger.info(data);
-      io.emit('test:received', { message: 'test received' });
+      socket.emit('test:received', { message: 'test received' });
     });
   });
 
