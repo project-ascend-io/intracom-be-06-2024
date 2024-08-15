@@ -21,6 +21,8 @@ export const PostUserInviteSchema = z.object({
   }),
 });
 
+export type PostUserInviteParams = z.infer<typeof PostUserInviteSchema.shape.body>;
+
 export const UpdateUserInviteByHashSchema = z.object({
   params: z.object({
     hash: z.string(),

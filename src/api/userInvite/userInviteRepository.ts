@@ -1,7 +1,6 @@
 import { mongoDatabase } from '../mongoDatabase';
 import { UserInviteModel } from './userInviteModel';
-import { UserInvite } from './userInviteSchema';
-import { PostUserInviteSchema } from './userInviteValidation';
+import { CreateUserInvite, UserInvite } from './userInviteSchema';
 
 export const userInviteRepository = {
   startConnection: async () => {
@@ -56,7 +55,7 @@ export const userInviteRepository = {
     }
   },
 
-  insert: async (userInvite: typeof PostUserInviteSchema): Promise<UserInvite> => {
+  insert: async (userInvite: CreateUserInvite): Promise<UserInvite> => {
     try {
       await userInviteRepository.startConnection();
       const savedInvite = new UserInviteModel(userInvite);

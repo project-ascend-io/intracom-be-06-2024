@@ -8,7 +8,7 @@ import { logger } from '@/server';
 import { organizationRepository } from '../organization/organizationRepository';
 import { inviteState } from './userInviteModel';
 import { userInviteRepository } from './userInviteRepository';
-import { UserInvite } from './userInviteSchema';
+import { CreateUserInvite, UserInvite } from './userInviteSchema';
 
 const generateHash = (inputString: string) => {
   const hash = crypto.createHash('sha256');
@@ -82,7 +82,7 @@ export const userInviteService = {
         }
       }
       for (const email of userEmails) {
-        const newUserInvite: UserInvite = {
+        const newUserInvite: CreateUserInvite = {
           email: email,
           state: inviteState.Pending,
           organization: organizationId,
@@ -150,7 +150,7 @@ export const userInviteService = {
       if ('state' in userInviteParams) {
         userInviteParams = setStateParams(userInviteParams, userInvite);
       }
-      const savedUserInvite = await userInviteRepository.update(userInvite._id, userInviteParams);
+      const savedUserInvite = await userInviteRepository.update(userInvite._id.toString(), userInviteParams);
 
       if ('state' in userInviteParams && userInviteParams.state == inviteState.Expired) {
         return new ServiceResponse(ResponseStatus.Failed, 'User Invite expired', null, StatusCodes.BAD_REQUEST);
@@ -181,7 +181,7 @@ export const userInviteService = {
         return new ServiceResponse(ResponseStatus.Failed, 'User invitation has expired', null, StatusCodes.GONE);
       }
       const orgId = userInvite.organization._id;
-      const organization = await organizationRepository.findByIdAsync(orgId);
+      const organization = await organizationRepository.findByIdAsync(orgId.toString());
       const userInviteResponse = {
         _id: userInvite._id,
         email: userInvite.email,
