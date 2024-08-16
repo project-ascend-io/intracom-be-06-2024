@@ -11,8 +11,11 @@ export const ModelID = z.object({
 export const NewChatSchema = z.object({
   chatName: z.string().openapi({ example: 'user' }),
   isChannel: z.boolean().openapi({ example: false }),
-  users: z.instanceof(ObjectId).array(),
-  chatAdmin: z.instanceof(ObjectId),
+  users: z
+    .string()
+    .array()
+    .openapi({ example: ['66b14242e9a75ff13a66027a', '66b14242e9a75ff13a66027b'] }),
+  chatAdmin: z.null(),
 });
 
 export const ChatSchema = z.object({
@@ -20,7 +23,7 @@ export const ChatSchema = z.object({
   chatName: z.string().openapi({ example: 'user' }),
   isChannel: z.boolean().openapi({ example: false }),
   users: z.instanceof(ObjectId).array(),
-  chatAdmin: z.instanceof(ObjectId),
+  chatAdmin: z.null(),
 });
 
 export type NewChat = z.infer<typeof NewChatSchema>;
