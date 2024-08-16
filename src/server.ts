@@ -4,7 +4,9 @@ import helmet from 'helmet';
 import { pino } from 'pino';
 
 import { authRouter } from '@/api/auth/authRouter';
+import { chatRouter } from '@/api/chat/chatRouter';
 import { healthCheckRouter } from '@/api/healthCheck/healthCheckRouter';
+import { messageRouter } from '@/api/message/messageRouter';
 import { organizationRouter } from '@/api/organization/organizationRouter';
 import { userRouter } from '@/api/user/userRouter';
 import { openAPIRouter } from '@/api-docs/openAPIRouter';
@@ -43,6 +45,8 @@ app.use('/auth', authRouter);
 app.use('/health-check', healthCheckRouter);
 app.use('/organizations', organizationRouter);
 app.use('/users', userRouter);
+app.use('/messages', messageRouter);
+app.use('/chats', chatRouter);
 
 // Swagger UI
 app.use('/api-docs', openAPIRouter);
