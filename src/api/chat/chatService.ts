@@ -1,4 +1,3 @@
-import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
@@ -8,9 +7,8 @@ import { chatRepository } from './chatRepository';
 import { Chat, NewChat } from './chatSchema';
 
 export const chatService = {
-  findAll: async (req: Request): Promise<ServiceResponse<Chat[] | null>> => {
+  findAll: async (userId: string): Promise<ServiceResponse<Chat[] | null>> => {
     try {
-      const userId = req.params.id;
       const chats = await chatRepository.findAllAsync(userId);
 
       if (!chats) {
@@ -30,9 +28,8 @@ export const chatService = {
     }
   },
 
-  createChat: async (req: Request): Promise<ServiceResponse<Chat | NewChat | null>> => {
+  createChat: async (recipientId: string, creatorId: string): Promise<ServiceResponse<Chat | NewChat | null>> => {
     try {
-      const { recipientId, creatorId } = req.body;
       const chat = await chatRepository.accessChatAsync(recipientId, creatorId);
 
       return new ServiceResponse<Chat>(ResponseStatus.Success, 'Chat created successfuly', chat, StatusCodes.OK);

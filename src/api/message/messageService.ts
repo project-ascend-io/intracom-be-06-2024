@@ -1,21 +1,19 @@
-import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
 import { messageRepository } from '@/api/message/messageRepository';
-import { Message, MessageSchema, NewMessage } from '@/api/message/messageSchema';
+import { Message, NewMessage } from '@/api/message/messageSchema';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { logger } from '@/server';
 
 export const messageService = {
-  getMessages: async (req: Request): Promise<ServiceResponse<Message[] | null>> => {
+  getMessages: async (id: string): Promise<ServiceResponse<Message[] | null>> => {
     try {
-      const chatId = req.params.id;
-      const messages = await messageRepository.findByIdAsync(chatId);
+      const messages = await messageRepository.findByIdAsync(id);
 
       if (!messages) {
         return new ServiceResponse(
           ResponseStatus.Failed,
-          `Messages not found for chat id: ${chatId}`,
+          `Messages not found for chat id: ${id}`,
           null,
           StatusCodes.NOT_FOUND
         );
@@ -29,9 +27,8 @@ export const messageService = {
     }
   },
 
-  postMessage: async (req: Request): Promise<ServiceResponse<Message | null>> => {
+  postMessage: async (newMessage: NewMessage): Promise<ServiceResponse<Message | null>> => {
     try {
-      const newMessage: NewMessage = MessageSchema.parse(req.body);
       const message = await messageRepository.insertMessageAsync(newMessage);
 
       return new ServiceResponse<Message>(
