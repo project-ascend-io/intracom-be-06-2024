@@ -20,7 +20,7 @@ export const messageRepository = {
     }
   },
 
-  insertMessageAsync: async (message: NewMessage): Promise<Message> => {
+  insertMessageAsync: async (message: NewMessage): Promise<Message | null> => {
     try {
       await messageRepository.startConnection();
       const newMessage = new MessageModel(message);
