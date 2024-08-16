@@ -2,7 +2,7 @@ import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import express, { Request, Response, Router } from 'express';
 import { z } from 'zod';
 
-import { MessageSchema } from '@/api/message/messageSchema';
+import { MessageSchema, NewMessage } from '@/api/message/messageSchema';
 import { messageService } from '@/api/message/messageService';
 import { GetMessageSchema, PostMessageSchema } from '@/api/message/messageValidation';
 import { createApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
@@ -26,7 +26,8 @@ export const messageRouter: Router = (() => {
   });
 
   router.get('/:id', validateRequest(GetMessageSchema), async (req: Request, res: Response) => {
-    const serviceResponse = await messageService.getMessages(req);
+    const { id } = req.params;
+    const serviceResponse = await messageService.getMessages(id);
 
     handleServiceResponse(serviceResponse, res);
   });
@@ -42,7 +43,8 @@ export const messageRouter: Router = (() => {
   });
 
   router.post('/', validateRequest(PostMessageSchema), async (req: Request, res: Response) => {
-    const serviceResponse = await messageService.postMessage(req);
+    const newMessage: NewMessage = MessageSchema.parse(req.body);
+    const serviceResponse = await messageService.postMessage(newMessage);
 
     handleServiceResponse(serviceResponse, res);
   });

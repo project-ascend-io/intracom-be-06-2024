@@ -23,7 +23,8 @@ export const chatRouter: Router = (() => {
   });
 
   router.post('/', validateRequest(PostChatSchema), async (req: Request, res: Response) => {
-    const serviceResponse = await chatService.createChat(req);
+    const { recipientId, creatorId } = req.body;
+    const serviceResponse = await chatService.createChat(recipientId, creatorId);
     handleServiceResponse(serviceResponse, res);
   });
 
@@ -36,7 +37,8 @@ export const chatRouter: Router = (() => {
   });
 
   router.get('/:id', validateRequest(GetChatSchema), async (req: Request, res: Response) => {
-    const serviceResponse = await chatService.findAll(req);
+    const userId = req.params.id;
+    const serviceResponse = await chatService.findAll(userId);
     handleServiceResponse(serviceResponse, res);
   });
   return router;
