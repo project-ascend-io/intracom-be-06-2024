@@ -9,9 +9,9 @@ export const ModelID = z.object({
 });
 
 export const NewMessageSchema = z.object({
-  sender: z.instanceof(ObjectId),
+  sender: z.string().openapi({ example: '66b69114935161d476b3bc3b' }),
   content: z.string().trim().openapi({ example: 'Hello World!' }),
-  chat: z.instanceof(ObjectId),
+  chat: z.string().openapi({ example: '66b69114935161d476b3bc3b' }),
 });
 
 export const MessageSchema = z.object({
