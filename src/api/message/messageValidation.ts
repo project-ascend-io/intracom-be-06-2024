@@ -8,9 +8,9 @@ export const GetMessageSchema = z.object({
 
 export const PostMessageSchema = z.object({
   body: z.object({
-    sender: z.object({ _id: commonValidations.id }),
+    sender: commonValidations.id,
     content: z.string().openapi({ example: 'Hello, World!' }),
-    chat: z.object({ _id: commonValidations.id }),
+    chat: commonValidations.id,
   }),
 });
 
