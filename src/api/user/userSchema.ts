@@ -27,6 +27,7 @@ export const UserResponseSchema = z
     organization: z
       .object({
         name: z.string().openapi('Research Corp.'),
+        _id: z.instanceof(ObjectId),
       })
       .merge(ModelID),
     role: z.enum(userRolesArray).openapi({ example: userRoles.Admin }),
