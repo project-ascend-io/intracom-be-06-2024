@@ -3,6 +3,7 @@ import { randomBytes } from 'crypto';
 import { StatusCodes } from 'http-status-codes';
 
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
+import { createEmailTransformer, sendUserInvite } from '@/common/services/emailService';
 import { logger } from '@/server';
 
 import { organizationRepository } from '../organization/organizationRepository';
@@ -90,6 +91,16 @@ export const userInviteService = {
           expires_in: generateExpDate(),
         };
         const savedUserInvite = await userInviteRepository.insert(newUserInvite);
+
+        const emailTransformer = await createEmailTransformer(organization);
+        await sendUserInvite(emailTransformer!, {
+          to: '',
+          url: '',
+          from: newUserInvite.email,
+          hash: newUserInvite.hash,
+          organization_name: organization.name,
+        });
+
         createdInvites.push(savedUserInvite);
       }
 

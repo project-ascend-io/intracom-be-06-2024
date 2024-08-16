@@ -3,7 +3,7 @@ import { UpdateResult } from 'mongodb';
 import { EmailSettingsModel } from '@/api/emailSettings/emailSettingsModel';
 import { EmailSettings, EmailSettingsTest, NewEmailSettings } from '@/api/emailSettings/emailSettingsSchema';
 import { mongoDatabase } from '@/api/mongoDatabase';
-import { sendTestEmail } from '@/common/utils/sendTestEmail';
+import { EmailOptions, sendTestEmail } from '@/common/utils/sendTestEmail';
 
 export const emailSettingsRepository = {
   startConnection: async () => {
@@ -62,7 +62,7 @@ export const emailSettingsRepository = {
         return false;
       }
 
-      const options = {
+      const options: EmailOptions = {
         server: server,
         port: port,
         username: username,

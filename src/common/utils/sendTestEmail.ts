@@ -1,6 +1,6 @@
 import nodemailer, { Transporter } from 'nodemailer';
 
-interface EmailOptions {
+export interface EmailOptions {
   server: string;
   port: number;
   username: string;
