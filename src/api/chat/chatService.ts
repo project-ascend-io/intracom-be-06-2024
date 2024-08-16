@@ -12,7 +12,7 @@ export const chatService = {
       const chats = await chatRepository.findAllAsync(userId);
 
       if (!chats) {
-        return new ServiceResponse(
+        return new ServiceResponse<null>(
           ResponseStatus.Failed,
           `Chats not found for user id: ${userId}`,
           null,
@@ -32,7 +32,11 @@ export const chatService = {
     try {
       const chat = await chatRepository.accessChatAsync(recipientId, creatorId);
 
-      return new ServiceResponse<Chat>(ResponseStatus.Success, 'Chat created successfuly', chat, StatusCodes.OK);
+      if (!chat) {
+        return new ServiceResponse<null>(ResponseStatus.Failed, 'Chat not created', null, StatusCodes.NOT_FOUND);
+      }
+
+      return new ServiceResponse<Chat>(ResponseStatus.Success, 'Chat created successfully', chat, StatusCodes.OK);
     } catch (err) {
       const errorMessage = `Error creating chat: ${(err as Error).message}`;
       logger.error(errorMessage);
