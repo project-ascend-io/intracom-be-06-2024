@@ -21,7 +21,7 @@ export const messageService = {
 
       return new ServiceResponse<Message[]>(ResponseStatus.Success, 'Messages found', messages, StatusCodes.OK);
     } catch (err) {
-      const errorMessage = `Error getting messages: $${(err as Error).message}`;
+      const errorMessage = `Error getting messages: ${(err as Error).message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
@@ -31,9 +31,13 @@ export const messageService = {
     try {
       const message = await messageRepository.insertMessageAsync(newMessage);
 
+      if (!message) {
+        return new ServiceResponse<null>(ResponseStatus.Failed, 'Message was not created', null, StatusCodes.NOT_FOUND);
+      }
+
       return new ServiceResponse<Message>(
         ResponseStatus.Success,
-        'Messages inserted successfuly',
+        'Message inserted successfully',
         message,
         StatusCodes.OK
       );
