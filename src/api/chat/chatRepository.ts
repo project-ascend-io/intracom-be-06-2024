@@ -28,7 +28,7 @@ export const chatRepository = {
       throw error;
     }
   },
-  accessChatAsync: async (recipientId: string, creatorId: string): Promise<Chat> => {
+  accessChatAsync: async (recipientId: string, creatorId: string): Promise<Chat | null> => {
     try {
       await chatRepository.startConnection();
       let isChat = await ChatModel.find({
