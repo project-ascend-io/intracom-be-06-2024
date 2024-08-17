@@ -3,6 +3,8 @@ import nodemailer, { Transporter } from 'nodemailer';
 import { emailSettingsRepository } from '@/api/emailSettings/emailSettingsRepository';
 import { EmailSettings } from '@/api/emailSettings/emailSettingsSchema';
 import { Organization } from '@/api/organization/organizationSchema';
+import { logger } from '@/server';
+import { UserInviteTemplate } from '@/templates/userInviteTemplate';
 
 export interface MailBag {
   to: string;
@@ -13,6 +15,8 @@ export interface MailBag {
 }
 
 export const createEmailTransformer = async (organization: Organization): Promise<Transporter | null> => {
+  logger.info('organization._id');
+  logger.info(organization._id.toString());
   const settings: EmailSettings | null = await emailSettingsRepository.findByIdAsync(organization._id.toString());
   if (!settings) {
     return null;
@@ -29,12 +33,20 @@ export const createEmailTransformer = async (organization: Organization): Promis
 };
 
 export const sendUserInvite = async (emailTransformer: Transporter, mailSender: MailBag) => {
-  const hash: string = 'hash';
-  const domain: string = 'https://localhost:8080/';
+  const hash: string = mailSender.hash;
+  const domain: string = mailSender.url;
   const link = domain + 'user-invites/' + hash;
+
+  const template = UserInviteTemplate({
+    invite_link: link,
+    organization_name: mailSender.organization_name,
+    organization_website: domain,
+    owner_email: mailSender.from,
+  });
+
   const body = {
     subject: `Join ${mailSender.organization_name} in Intracom`,
-    html: `<h1>Join ${mailSender.organization_name} in Intracom</h1><p>${mailSender.organization_name} (${mailSender.from}) has invited you to join the Intracom workspace ${mailSender.organization_name}.</p><a href="${link}" target="_blank">Click here</a>`,
+    html: template,
   };
 
   const response = await emailTransformer.sendMail({

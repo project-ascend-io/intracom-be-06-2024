@@ -66,10 +66,14 @@ export const userInviteRepository = {
     }
   },
 
-  update: async (userInviteId: string, updateData: any): Promise<UserInvite | null> => {
+  update: async (userInviteId: string, updateData: any, includeOrg: boolean = false): Promise<UserInvite | null> => {
     try {
       await userInviteRepository.startConnection();
-      return await UserInviteModel.findByIdAndUpdate(userInviteId, updateData, { new: true });
+      let query = UserInviteModel.findByIdAndUpdate(userInviteId, updateData, { new: true });
+      if (includeOrg && query) {
+        query = query.populate('organization');
+      }
+      return await query;
     } catch (err) {
       console.error('[Error] userInviteRepository - insert: ', err);
       throw err;

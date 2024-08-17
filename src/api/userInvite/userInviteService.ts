@@ -9,7 +9,7 @@ import { logger } from '@/server';
 import { organizationRepository } from '../organization/organizationRepository';
 import { inviteState } from './userInviteModel';
 import { userInviteRepository } from './userInviteRepository';
-import { CreateUserInvite, UserInvite } from './userInviteSchema';
+import { CreateUserInvite, UserInvite, UserInviteCompleteSchema } from './userInviteSchema';
 
 const generateHash = (inputString: string) => {
   const hash = crypto.createHash('sha256');
@@ -94,9 +94,9 @@ export const userInviteService = {
 
         const emailTransformer = await createEmailTransformer(organization);
         await sendUserInvite(emailTransformer!, {
-          to: '',
-          url: '',
-          from: newUserInvite.email,
+          url: 'https://localhost:3030',
+          to: newUserInvite.email,
+          from: 'oscar@projectascend.io',
           hash: newUserInvite.hash,
           organization_name: organization.name,
         });
@@ -132,16 +132,30 @@ export const userInviteService = {
       if ('state' in userInviteParams) {
         userInviteParams = setStateParams(userInviteParams, userInvite);
       }
-      const savedUserInvite = await userInviteRepository.update(id, userInviteParams);
+      const savedUserInvite = await userInviteRepository.update(id, userInviteParams, true);
 
       if ('state' in userInviteParams && userInviteParams.state == inviteState.Expired) {
         return new ServiceResponse(ResponseStatus.Failed, 'User Invite expired', null, StatusCodes.BAD_REQUEST);
       }
 
+      if ('state' in userInviteParams && userInviteParams.state == inviteState.Pending && savedUserInvite) {
+        const emailTransformer = await createEmailTransformer(organization);
+        await sendUserInvite(emailTransformer!, {
+          url: 'http://localhost:3030',
+          to: savedUserInvite.email,
+          from: 'oscar@projectascend.io',
+          hash: savedUserInvite.hash,
+          organization_name: organization.name,
+        });
+      }
+      let response = null;
+      if (savedUserInvite) {
+        response = UserInviteCompleteSchema.parse(savedUserInvite);
+      }
       return new ServiceResponse<UserInvite | null>(
         ResponseStatus.Success,
         'User invite updated.',
-        savedUserInvite,
+        response,
         StatusCodes.OK
       );
     } catch (err) {
