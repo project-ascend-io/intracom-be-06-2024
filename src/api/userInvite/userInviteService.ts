@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto';
 import { StatusCodes } from 'http-status-codes';
 
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
-import { createEmailTransformer, sendUserInvite } from '@/common/services/emailService';
+import { emailService } from '@/common/services/emailService';
 import { logger } from '@/server';
 
 import { organizationRepository } from '../organization/organizationRepository';
@@ -92,8 +92,7 @@ export const userInviteService = {
         };
         const savedUserInvite = await userInviteRepository.insert(newUserInvite);
 
-        const emailTransformer = await createEmailTransformer(organization);
-        await sendUserInvite(emailTransformer!, {
+        await emailService.sendUserInvite(organization, {
           url: 'https://localhost:3030',
           to: newUserInvite.email,
           from: 'oscar@projectascend.io',
@@ -139,10 +138,11 @@ export const userInviteService = {
       }
 
       if ('state' in userInviteParams && userInviteParams.state == inviteState.Pending && savedUserInvite) {
-        const emailTransformer = await createEmailTransformer(organization);
-        await sendUserInvite(emailTransformer!, {
+        await emailService.sendUserInvite(organization, {
+          // @todo - replace with intracom instance url
           url: 'http://localhost:3030',
           to: savedUserInvite.email,
+          // @todo - replace with smtp email
           from: 'oscar@projectascend.io',
           hash: savedUserInvite.hash,
           organization_name: organization.name,
