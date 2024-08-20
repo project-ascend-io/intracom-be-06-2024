@@ -44,6 +44,8 @@ export const authRouter: Router = (() => {
     const credentials = LoginSchema.shape.body.parse({ ..._req.body });
     const serviceResponse = await authService.login(credentials);
     if (serviceResponse.success && NODE_ENV !== 'test') {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       _req.session.userId = serviceResponse.responseObject?._id;
       const authUser: UserAuthResponse = {
         ...(serviceResponse.responseObject as UserResponse),
@@ -74,6 +76,8 @@ export const authRouter: Router = (() => {
 
   router.get('/check', verifyAuthentication, async (_req: Request, res: Response) => {
     // userId will always be found, if userId doesn't exist, it will be caught in verifyAuthentication
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     const foundUser = await userRepository.findByIdAsync(_req.session.userId);
     const authUser: UserAuthResponse = {
       ...(foundUser as UserResponse),
@@ -102,6 +106,8 @@ export const authRouter: Router = (() => {
   });
 
   router.post('/logout', async (_req: Request, res: Response) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     if (!_req.session.userId) {
       const successResponse = new ServiceResponse(
         ResponseStatus.Success,
@@ -112,6 +118,8 @@ export const authRouter: Router = (() => {
       handleServiceResponse(successResponse, res);
       return;
     }
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     const foundUser = await userRepository.findByIdAsync(_req.session.userId);
     _req.session.destroy((err) => {
       if (err) {

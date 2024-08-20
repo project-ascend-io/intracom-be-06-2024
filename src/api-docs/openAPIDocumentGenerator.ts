@@ -7,6 +7,7 @@ import { healthCheckRegistry } from '@/api/healthCheck/healthCheckRouter';
 import { messageRegistry } from '@/api/message/messageRouter';
 import { organizationRegistry } from '@/api/organization/organizationRouter';
 import { userRegistry } from '@/api/user/userRouter';
+import { userInviteRegistry } from '@/api/userInvite/userInviteRouter';
 
 export function generateOpenAPIDocument() {
   const registry = new OpenAPIRegistry([
@@ -17,7 +18,9 @@ export function generateOpenAPIDocument() {
     emailSettingsRegistry,
     chatRegistry,
     messageRegistry,
+    userInviteRegistry,
   ]);
+
   const generator = new OpenApiGeneratorV3(registry.definitions);
 
   return generator.generateDocument({

@@ -1,14 +1,14 @@
-import bcrypt from 'bcryptjs';
-import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
 import { organizationRepository } from '@/api/organization/organizationRepository';
 import { userRepository } from '@/api/user/userRepository';
-import { BasicUser, User, UserResponse } from '@/api/user/userSchema';
-import { PostUser } from '@/api/user/userValidation';
+import { User, UserResponse } from '@/api/user/userSchema';
+import { PostAdminUser, PostUser } from '@/api/user/userValidation';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { logger } from '@/server';
 
+import { userInviteRepository } from '../userInvite/userInviteRepository';
+import { isValid } from '../userInvite/userInviteService';
 import { userRoles } from './userModel';
 
 export const userService = {
@@ -40,9 +40,68 @@ export const userService = {
     }
   },
 
-  insertUser: async (
-    user: PostUser,
-    role: userRoles = userRoles.Admin
+  insertUser: async (user: PostUser, role: userRoles): Promise<ServiceResponse<UserResponse | null>> => {
+    try {
+      const userInvite = await userInviteRepository.findByHashAsync(user.hash);
+      if (!userInvite) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User invite not found', null, StatusCodes.UNAUTHORIZED);
+      }
+      if (!isValid(userInvite.expires_in)) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User invite expired', null, StatusCodes.UNAUTHORIZED);
+      }
+
+      const existingUser = await userRepository.findByEmailAsync(userInvite.email);
+      if (existingUser) {
+        return new ServiceResponse(ResponseStatus.Failed, `User already exists`, null, StatusCodes.UNAUTHORIZED);
+      }
+
+      const savedUser = await userRepository
+        .insertUser({
+          username: user.username,
+          email: userInvite.email,
+          password: user.password,
+          organization: userInvite.organization._id,
+          role,
+        })
+        .catch((err) => {
+          throw new Error(err.message);
+        });
+
+      const userResponse: UserResponse = {
+        _id: savedUser._id,
+        username: savedUser.username,
+        email: savedUser.email,
+        organization: {
+          _id: savedUser.organization._id,
+          name: savedUser.organization.name,
+        },
+        role: savedUser.role,
+      };
+
+      /// removing exp date and hash for User Invite for security reasons after User has created an account
+      const userInviteParams: any = {
+        expires_in: '',
+        hash: '',
+      };
+      await userInviteRepository.update(userInvite._id.toString(), userInviteParams);
+
+      return new ServiceResponse<UserResponse>(
+        ResponseStatus.Success,
+        'User created.',
+        userResponse,
+        StatusCodes.CREATED
+      );
+    } catch (err) {
+      console.log(err);
+      const errorMessage = `Error creating new user: , ${(err as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  insertUserAndOrganization: async (
+    user: PostAdminUser,
+    role: userRoles
   ): Promise<ServiceResponse<UserResponse | null>> => {
     try {
       const existingUser = await userRepository.findByEmailAsync(user.email);
@@ -56,7 +115,7 @@ export const userService = {
           name: user.organization,
         })
         .then(async (org) => {
-          return await userRepository.insertUser({
+          return await userRepository.insertUserAndOrganization({
             username: user.username,
             email: user.email,
             password: user.password,
@@ -81,46 +140,13 @@ export const userService = {
 
       return new ServiceResponse<UserResponse>(
         ResponseStatus.Success,
-        'User created.',
+        'User and Organization created.',
         userResponse,
         StatusCodes.CREATED
       );
     } catch (err) {
       console.log(err);
-      const errorMessage = `Error creating new user: , ${(err as Error).message}`;
-      //const errorMessage = `[Error] userService - InsertUser: `;
-      logger.error(errorMessage);
-      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
-    }
-  },
-
-  signup: async (request: Request): Promise<ServiceResponse<string | null>> => {
-    try {
-      const { email, username, password, organization, role } = request.body;
-
-      const existingUser = await userRepository.findByEmailAsync(email);
-      if (existingUser) {
-        return new ServiceResponse(ResponseStatus.Failed, 'User already exists', null, StatusCodes.BAD_REQUEST);
-      }
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      const newUser: BasicUser = {
-        email,
-        username,
-        organization,
-        password: hashedPassword,
-        role,
-      };
-
-      const savedUser = await userRepository.insertUser(newUser);
-
-      // This sets up the session and sets a session variable 'userId' with the user's ID
-      (request.session as any).userId = savedUser._id;
-
-      return new ServiceResponse(ResponseStatus.Success, 'User created.', null, StatusCodes.OK);
-    } catch (err) {
-      const errorMessage = `userService - Signup - Error Message: ${err}`;
+      const errorMessage = `Error creating new user and organization: , ${(err as Error).message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }

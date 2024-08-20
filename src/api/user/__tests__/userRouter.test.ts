@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, Mock, TestContext, vi } fr
 
 import { User, UserResponse } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
-import { PostUser } from '@/api/user/userValidation';
+import { PostAdminUser, PostUser } from '@/api/user/userValidation';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
 import { app } from '@/server';
 
@@ -15,13 +15,14 @@ vi.mock('../userService', () => ({
   userService: {
     findAll: vi.fn(),
     findById: vi.fn(),
-    insertUser: vi.fn(),
+    insertUserAndOrganization: vi.fn(),
     signup: vi.fn(),
   },
 }));
 
 vi.mock('../userRepository', () => ({
   userRepository: {
+    insertUserAndOrganization: vi.fn(),
     insertUser: vi.fn(),
   },
 }));
@@ -78,6 +79,7 @@ describe('User API Endpoints', () => {
         _id: user._id,
         email: user.email,
         username: user.username,
+        role: userRoles.Admin,
         organization: {
           _id: new mongoose.mongo.ObjectId(),
           name: 'Beach Front',
@@ -145,10 +147,9 @@ describe('User API Endpoints', () => {
     it('should return password does not pass complexity', async () => {
       // Act
       const newUser: PostUser = {
-        email: 'newUser@gmail.com',
+        hash: 'newUser@gmail.com',
         password: 'testing',
         username: 'newUser',
-        organization: 'Example Corp.',
       };
       // Assert
       const response = await request(app).post(`/users`).send(newUser).set('Accept', 'application/json');
@@ -158,7 +159,7 @@ describe('User API Endpoints', () => {
 
     it('should return the newly created user', async () => {
       // Act
-      const newUser: PostUser = {
+      const newUser: PostAdminUser = {
         email: 'newUser@gmail.com',
         password: 'Testing123!',
         username: 'newUser',
@@ -181,7 +182,7 @@ describe('User API Endpoints', () => {
         userResponse,
         StatusCodes.CREATED
       );
-      (userService.insertUser as Mock).mockReturnValue(responseMock);
+      (userService.insertUserAndOrganization as Mock).mockReturnValue(responseMock);
 
       // Assert
       const response = await request(app).post(`/users`).send(newUser).set('Accept', 'application/json');

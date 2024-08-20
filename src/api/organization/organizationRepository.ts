@@ -19,4 +19,14 @@ export const organizationRepository = {
       throw err;
     }
   },
+
+  findByIdAsync: async (id: string): Promise<Organization | null> => {
+    try {
+      await organizationRepository.startConnection();
+      return await OrganizationModel.findById(id);
+    } catch (err) {
+      console.error('[Error] OrganizationRepository - findByIdAsync: ', err);
+      throw err;
+    }
+  },
 };

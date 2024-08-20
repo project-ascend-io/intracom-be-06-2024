@@ -9,6 +9,7 @@ import { healthCheckRouter } from '@/api/healthCheck/healthCheckRouter';
 import { messageRouter } from '@/api/message/messageRouter';
 import { organizationRouter } from '@/api/organization/organizationRouter';
 import { userRouter } from '@/api/user/userRouter';
+import { userInviteRouter } from '@/api/userInvite/userInviteRouter';
 import { openAPIRouter } from '@/api-docs/openAPIRouter';
 import { verifyAuthentication } from '@/common/middleware/authVerifier';
 import errorHandler from '@/common/middleware/errorHandler';
@@ -45,6 +46,8 @@ app.use('/auth', authRouter);
 app.use('/health-check', healthCheckRouter);
 app.use('/organizations', organizationRouter);
 app.use('/users', userRouter);
+app.use('/user-invites', userInviteRouter);
+app.use('/organizations', userInviteRouter);
 app.use('/messages', messageRouter);
 app.use('/chats', chatRouter);
 
