@@ -6,6 +6,7 @@ import { UserCompleteSchema, UserResponseSchema } from '@/api/user/userSchema';
 import { userService } from '@/api/user/userService';
 import { GetUserSchema, PostAdminUserSchema, PostUserSchema } from '@/api/user/userValidation';
 import { createApiResponse, createPostBodyParams } from '@/api-docs/openAPIResponseBuilders';
+import { verifyAuthentication } from '@/common/middleware/authVerifier';
 import { handleServiceResponse, validateRequest } from '@/common/utils/httpHandlers';
 
 import { userRoles } from './userModel';
@@ -37,7 +38,7 @@ export const userRouter: Router = (() => {
     responses: createApiResponse(UserResponseSchema, 'Success'),
   });
 
-  router.get('/:id', validateRequest(GetUserSchema), async (req: Request, res: Response) => {
+  router.get('/:id', verifyAuthentication, validateRequest(GetUserSchema), async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const serviceResponse = await userService.findById(id);
     handleServiceResponse(serviceResponse, res);
