@@ -16,9 +16,9 @@ export const NewMessageSchema = z.object({
 
 export const MessageSchema = z.object({
   _id: z.string().openapi({ example: '668f0c2ce629e80c6fa7ec7d' }),
-  sender: z.instanceof(ObjectId),
+  sender: z.string().openapi({ example: '66c3d383189638b81eac7cf7' }),
   content: z.string().trim().openapi({ example: 'Hello World!' }),
-  chat: z.instanceof(ObjectId),
+  chat: z.string().openapi({ example: '66c3d3fe189638b81eac7cfd' }),
 });
 
 export type NewMessage = z.infer<typeof NewMessageSchema>;
