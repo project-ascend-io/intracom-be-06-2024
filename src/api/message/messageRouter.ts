@@ -19,9 +19,9 @@ export const messageRouter: Router = (() => {
     method: 'get',
     path: '/messages/{id}',
     tags: ['Message'],
-    responses: createApiResponse(z.array(MessageSchema), 'Success'),
+    responses: createApiResponse(z.array(MessageSchema).min(4), 'Success'),
     request: {
-      params: GetMessageSchema,
+      params: GetMessageSchema.shape.params,
     },
   });
 
