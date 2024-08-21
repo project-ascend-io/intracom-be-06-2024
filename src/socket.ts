@@ -1,4 +1,4 @@
-// socket.ts
+import { instrument } from '@socket.io/admin-ui';
 import { Server } from 'socket.io';
 
 import { logger } from '@/server';
@@ -7,9 +7,15 @@ export const initializeSocket = (server: any) => {
   const io = new Server(server, {
     pingTimeout: 60000,
     cors: {
-      origin: 'http://localhost:9000',
+      origin: ['http://localhost:9000', 'https://admin.socket.io'],
       methods: ['GET', 'POST'],
+      credentials: true,
     },
+  });
+
+  instrument(io, {
+    auth: false,
+    mode: 'development',
   });
 
   io.on('connection', (socket) => {
@@ -22,12 +28,12 @@ export const initializeSocket = (server: any) => {
     });
 
     socket.on('join room', (room) => {
-      socket.join(room);
-      logger.info(`User Joined Room: ${room}`);
+      socket.join(room._id);
+      logger.info(`User Joined Room: ${room._id}`);
     });
 
-    socket.on('typing', (room) => socket.in(room).emit('typing'));
-    socket.on('stop typing', (room) => socket.in(room).emit('stop typing'));
+    socket.on('typing', (room) => socket.in(room._id).emit('typing'));
+    socket.on('stop typing', (room) => socket.in(room._id).emit('stop typing'));
 
     socket.on('new message', (newMessage) => {
       const chat = newMessage.chat;
@@ -40,7 +46,7 @@ export const initializeSocket = (server: any) => {
     });
 
     socket.on('disconnect', () => {
-      logger.info(`USER DISCONNECTED: ${socket}`);
+      logger.info(`USER DISCONNECTED: ${socket.data.username}`);
       socket.leave(socket.data._id);
     });
 
