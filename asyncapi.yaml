@@ -1,0 +1,92 @@
+asyncapi: '2.0.0'
+info:
+  title: Intracom Socket.io API
+  version: '1.0.0'
+  description: Documentation for the Socket.io API of the Intracom project.
+servers:
+  development:
+    url: ws://localhost:9000
+    protocol: wss
+channels:
+  /setup:
+    description: Setup a user connection.
+    subscribe:
+      summary: User setup
+      message:
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            _id:
+              type: string
+            username:
+              type: string
+  /join room:
+    description: Join a chat room.
+    subscribe:
+      summary: Join room
+      message:
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            _id:
+              type: string
+  /typing:
+    description: Notify typing status.
+    subscribe:
+      summary: Typing
+      message:
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            _id:
+              type: string
+  /stop typing:
+    description: Notify stop typing status.
+    subscribe:
+      summary: Stop typing
+      message:
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            _id:
+              type: string
+  /new message:
+    description: Send a new message.
+    subscribe:
+      summary: New message
+      message:
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            sender:
+              type: object
+              properties:
+                _id:
+                  type: string
+            content:
+              type: string
+            chat:
+              type: object
+              properties:
+                _id:
+                  type: string
+                users:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+  /test:
+    description: Test event.
+    subscribe:
+      summary: Test
+      message:
+        contentType: application/json
+        payload:
+          type: string
