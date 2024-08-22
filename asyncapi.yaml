@@ -1,4 +1,4 @@
-asyncapi: '2.0.0'
+asyncapi: '2.6.0'
 id: 'urn:uuid:123e4567-e89b-12d3-a456-426614174000'
 defaultContentType: 'application/json'
 info:
@@ -25,6 +25,7 @@ channels:
   /setup:
     description: Setup a user connection.
     subscribe:
+      operationId: setupUser
       summary: User setup
       message:
         contentType: application/json
@@ -35,9 +36,10 @@ channels:
               type: string
             username:
               type: string
-  /join room:
+  /join-room:
     description: Join a chat room.
     subscribe:
+      operationId: joinRoom
       summary: Join room
       message:
         contentType: application/json
@@ -49,6 +51,7 @@ channels:
   /typing:
     description: Notify typing status.
     subscribe:
+      operationId: notifyTyping
       summary: Typing
       message:
         contentType: application/json
@@ -57,9 +60,10 @@ channels:
           properties:
             _id:
               type: string
-  /stop typing:
+  /stop-typing:
     description: Notify stop typing status.
     subscribe:
+      operationId: stopTyping
       summary: Stop typing
       message:
         contentType: application/json
@@ -68,9 +72,10 @@ channels:
           properties:
             _id:
               type: string
-  /new message:
+  /new-message:
     description: Send a new message.
     subscribe:
+      operationId: newMessage
       summary: New message
       message:
         contentType: application/json
@@ -99,6 +104,7 @@ channels:
   /test:
     description: Test event.
     subscribe:
+      operationId: testEvent
       summary: Test
       message:
         contentType: application/json
