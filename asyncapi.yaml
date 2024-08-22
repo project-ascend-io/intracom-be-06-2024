@@ -1,22 +1,8 @@
 asyncapi: '2.0.0'
-id: 'urn:uuid:123e4567-e89b-12d3-a456-426614174000'
-defaultContentType: 'application/json'
 info:
   title: Intracom Socket.io API
   version: '1.0.0'
   description: Documentation for the Socket.io API of the Intracom project.
-  contact:
-    name: API Support
-    url: 'http://www.example.com/support'
-    email: 'support@example.com'
-  license:
-    name: Apache 2.0
-    url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
-tags:
-  - name: user
-    description: Operations related to user management
-  - name: chat
-    description: Operations related to chat functionality
 servers:
   development:
     url: ws://localhost:9000
@@ -36,6 +22,9 @@ channels:
               type: string
             username:
               type: string
+          required:
+            - _id
+            - username
   /join-room:
     description: Join a chat room.
     subscribe:
@@ -51,7 +40,7 @@ channels:
   /typing:
     description: Notify typing status.
     subscribe:
-      operationId: notifyTyping
+      operationId: Typing
       summary: Typing
       message:
         contentType: application/json
