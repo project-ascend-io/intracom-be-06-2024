@@ -32,7 +32,16 @@ app.set('trust proxy', true);
 
 // Middlewares
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      },
+    },
+  })
+);
 app.use(rateLimiter);
 
 // Request logging
