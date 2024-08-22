@@ -64,7 +64,7 @@ app.use('/messages', messageRouter);
 app.use('/chats', chatRouter);
 
 // Socket.IO Documentation
-app.use('/socket', express.static(socketDocsPath));
+app.use('/socket-docs', express.static(socketDocsPath));
 
 // Swagger UI
 app.use('/api-docs', openAPIRouter);
