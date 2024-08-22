@@ -17,7 +17,7 @@
     "test:cov": "vitest run --coverage",
     "release": "semantic-release",
     "prepare": "husky",
-    "generate:docs": "ag asyncapi.yaml @asyncapi/html-template -o ./src/socket-docs"
+    "generate:docs": "ag asyncapi.yaml @asyncapi/html-template -o ./src/socket-docs --force-write"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.0.0",
