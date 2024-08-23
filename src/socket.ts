@@ -32,6 +32,10 @@ export const initializeSocket = (server: any) => {
       logger.info(`User Joined Room: ${room._id}`);
     });
 
+    socket.on('new chat', (chat) => {
+      socket.in(chat.recipientId).emit('new chat');
+    });
+
     socket.on('typing', (room) => socket.in(room._id).emit('typing'));
     socket.on('stop typing', (room) => socket.in(room._id).emit('stop typing'));
 
