@@ -1,101 +1,374 @@
 asyncapi: '2.0.0'
+# id: 'urn:uuid:123e4567-e89b-12d3-a456-426614174000'
+# defaultContentType: 'application/json'
 info:
   title: Intracom Socket.io API
   version: '1.0.0'
   description: Documentation for the Socket.io API of the Intracom project.
+  # contact:
+  #   name: API Support
+  #   url: 'http://www.example.com/support'
+  #   email: 'support@example.com'
+  # license:
+  #   name: Apache 2.0
+  #   url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
+# tags:
+#   - name: socket.io
+#     description: Events related to socket.io
+
 servers:
   development:
     url: ws://localhost:9000
     protocol: wss
+  production:
+    url: 'http://www.example.com/'
+    protocol: wss
+
 channels:
-  /setup:
-    description: Setup a user connection.
+  client/on(connected):
+    description: |
+      Event received from server indicating the client is connected in response to the client emitting the setup event. 
+
+      Here is an example of how to handle consuming the on(connected) event in your client code in React:
+
+      ```javascript
+      socket.on("connected", setSocketConnected(true));
+      ```
     subscribe:
-      operationId: setupUser
-      summary: User setup
+      operationId: on(connected)
       message:
-        contentType: application/json
-        payload:
-          type: object
-          properties:
-            _id:
-              type: string
-            username:
-              type: string
-          required:
-            - _id
-            - username
-  /join-room:
-    description: Join a chat room.
+        $ref: '#/components/messages/empty'
+
+  client/on(typing):
+    description: |
+      Event received from server indicating the user is typing in response to a client emitting the typing event. 
+
+      Here is an example of how to handle consuming the on(typing) event in your client code in React:
+
+      ```javascript
+      socket.on("typing", setIsTyping(true));
+      ```
     subscribe:
-      operationId: joinRoom
-      summary: Join room
+      operationId: on(typing)
       message:
-        contentType: application/json
-        payload:
-          type: object
-          properties:
-            _id:
-              type: string
-  /typing:
-    description: Notify typing status.
+        $ref: '#/components/messages/empty'
+
+  client/on(stop_typing):
+    description: |
+      Event received from server indicating the user has stopped typing in response to a client emitting the stop_typing event. 
+
+      Here is an example of how to handle consuming the on(stop typing) event in your client code in React:
+
+      ```javascript
+      socket.on("stop typing", setIsTyping(false));
+      ```
     subscribe:
-      operationId: Typing
-      summary: Typing
+      operationId: on(stop_typing)
       message:
-        contentType: application/json
-        payload:
-          type: object
-          properties:
-            _id:
-              type: string
-  /stop-typing:
-    description: Notify stop typing status.
+        $ref: '#/components/messages/empty'
+
+  client/on(message_received):
+    description: |
+      Event received from server when a message is sent to the client in response to the client emitting the new_message event. 
+
+      Here is an example of how to handle a on(message received) in your client code in React:
+
+      ```javascript
+      socket.on("message received", (newMessage) => {
+        if(newMessage.chat._id === selectedChat._id) {
+          setCurrentChatMessages([...messages, newMessage]);
+        } else {
+          if(!UnreadMessages.contains(newMessage)) {
+            setUnreadMessages([...unreadMessages, newMessage]);
+          }
+        }
+        setMessages([...messages, newMessage]);
+      });
+      ```
     subscribe:
-      operationId: stopTyping
-      summary: Stop typing
+      operationId: on(message_received)
       message:
-        contentType: application/json
-        payload:
-          type: object
-          properties:
-            _id:
-              type: string
-  /new-message:
-    description: Send a new message.
+        $ref: '#/components/messages/message_received'
+
+  client/on(new_chat):
+    description: |
+      Event received from server when a new chat room is created in response to the client emitting the new_chat event. 
+
+      Here is an example of how to handle consuming the on(new chat) event in your client code in React:
+
+      ```javascript
+      socket.on("new chat", () => {
+        const chats = fetchChats();
+        setChats(chats);
+      })
+      ```
     subscribe:
-      operationId: newMessage
-      summary: New message
+      operationId: on(new_chat)
       message:
-        contentType: application/json
-        payload:
-          type: object
-          properties:
-            sender:
-              type: object
-              properties:
-                _id:
-                  type: string
-            content:
-              type: string
-            chat:
-              type: object
-              properties:
-                _id:
-                  type: string
-                users:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      _id:
-                        type: string
-  /test:
-    description: Test event.
-    subscribe:
-      operationId: testEvent
-      summary: Test
+        $ref: '#/components/messages/empty'
+
+  client/emit(setup):
+    description: |
+      Event sent from a client when they want to set up their connection to the socket server.
+
+      Here is an example of how to handle publishing the emit(setup) event in your client code in React:
+
+      ```javascript
+      socket.emit("setup", user);
+      ```
+    publish:
+      operationId: emit(setup)
       message:
-        contentType: application/json
-        payload:
-          type: string
+        $ref: '#/components/messages/setup'
+
+  client/emit(join_room):
+    description: |
+      Event sent from a client when they want to join a chat room.
+
+      Here is an example of how to handle publishing the emit(join room) event in your client code in React:
+
+      ```javascript
+      socket.emit("join room", room);
+      ```
+    publish:
+      operationId: emit(join_room)
+      message:
+        $ref: '#/components/messages/join_room'
+
+  client/emit(stop_typing):
+    description: |
+      Event sent from client when they stop typing in a chat room.
+
+      Here is an example of how to handle publishing the emit(stop typing) event in your client code in React:
+
+      ```javascript
+      socket.emit("stop typing", room);
+      ```
+    publish:
+      operationId: emit(stop_typing)
+      summary: Event sent from client when they stop typing in a chat room
+      message:
+        $ref: '#/components/messages/stop_typing'
+
+  client/emit(typing):
+    description: |
+      Event sent from client when they are typing in a chat room.
+
+      Here is an example of how to handle publishing the emit(typing) event in your client code in React:
+
+      ```javascript
+      socket.emit("typing", room);
+      ```
+    publish:
+      operationId: emit(typing)
+      message:
+        $ref: '#/components/messages/typing'
+
+  client/emit(new_message):
+    description: |
+      Event sent from a client when they send a new message to a chat room.
+
+      Here is an example of how to handle publishing the emit(new message) event in your client code in React:
+
+      ```javascript
+      socket.emit("new message", data);
+      ```
+    publish:
+      operationId: emit(new_message)
+      message:
+        $ref: '#/components/messages/new_message'
+
+  client/emit(new_chat):
+    description: |
+      Event sent from a client when they create a new chat room.
+
+      Here is an example of how to handle publishing the emit(new chat) event in your client code in React:
+
+      ```javascript
+      const chat = {
+        recipientId: data.users[0]._id,
+      };
+
+      socket.emit("new chat", chat);
+      ```
+    publish:
+      operationId: emit(new_chat)
+      message:
+        $ref: '#/components/messages/chat'
+
+components:
+  messages:
+    empty:
+      payload:
+        type: object
+        description: This event does not get sent with any data.
+        additionalProperties: false
+
+    typing:
+      payload:
+        type: object
+        properties:
+          _id:
+            type: string
+            description: ID of the current selected chat
+        examples:
+          - { '_id': '66c3d3fe189638b81eac7cfd' }
+
+    stop_typing:
+      payload:
+        type: object
+        properties:
+          _id:
+            type: string
+            description: ID of the current selected chat
+        examples:
+          - { '_id': '66c3d3fe189638b81eac7cfd' }
+
+    message_received:
+      payload:
+        type: object
+        description: Message object
+        properties:
+          _id:
+            type: string
+          chat:
+            type: object
+            properties:
+              _id:
+                type: string
+              chatName:
+                type: string
+              users:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    _id:
+                      type: string
+                    username:
+                      type: string
+              isChannel:
+                type: boolean
+          sender:
+            type: object
+            properties:
+              _id:
+                type: string
+              username:
+                type: string
+          content:
+            type: string
+        examples:
+          - {
+              '_id': '66c3d7cc3098b9dddd4c4ecf',
+              'chat':
+                {
+                  '_id': '66c3d3fe189638b81eac7cfd',
+                  'chatName': 'Jane Doe',
+                  'users':
+                    [
+                      { '_id': '66c3d2fc189638b81eac7cf0', 'username': 'John Doe' },
+                      { '_id': '66c3d383189638b81eac7cf7', 'username': 'Jane Doe' },
+                    ],
+                  'isChannel': false,
+                },
+              'sender': { '_id': '66c3d2fc189638b81eac7cf0', 'username': 'John Doe' },
+              'content': 'Hello, how are you?',
+            }
+        additionalProperties: false
+
+    new_message:
+      payload:
+        type: object
+        description: Message object
+        properties:
+          _id:
+            type: string
+          chat:
+            type: object
+            properties:
+              _id:
+                type: string
+              chatName:
+                type: string
+              users:
+                type: array
+                description: Array of user objects
+                items:
+                  type: object
+                  properties:
+                    _id:
+                      type: string
+                    username:
+                      type: string
+              isChannel:
+                type: boolean
+                default: false
+            additionalProperties: false
+          sender:
+            type: object
+            properties:
+              _id:
+                type: string
+              username:
+                type: string
+            additionalProperties: false
+          content:
+            type: string
+        examples:
+          - {
+              '_id': '66c3d7cc3098b9dddd4c4ecf',
+              'chat':
+                {
+                  '_id': '66c3d3fe189638b81eac7cfd',
+                  'chatName': 'Jane Doe',
+                  'users':
+                    [
+                      { '_id': '66c3d2fc189638b81eac7cf0', 'username': 'John Doe' },
+                      { '_id': '66c3d383189638b81eac7cf7', 'username': 'Jane Doe' },
+                    ],
+                  'isChannel': false,
+                },
+              'sender': { '_id': '66c3d2fc189638b81eac7cf0', 'username': 'John Doe' },
+              'content': 'Hello, how are you?',
+            }
+        additionalProperties: false
+
+    setup:
+      payload:
+        type: object
+        description: User object
+        properties:
+          _id:
+            type: string
+          username:
+            type: string
+          email:
+            type: string
+          role:
+            type: string
+        examples:
+          - { '_id': '66c3d2fc189638b81eac7cf0', 'username': 'John Doe', 'email': 'john@email.com', 'role': 'user' }
+        additionalProperties: false
+
+    join_room:
+      payload:
+        type: object
+        properties:
+          _id:
+            type: string
+            description: ID of the current selected chat
+        examples:
+          - { '_id': '66c3d3fe189638b81eac7cfd' }
+        additionalProperties: false
+
+    chat:
+      payload:
+        type: object
+        properties:
+          recipientId:
+            type: string
+            description: ID of the user the chat was created with
+        examples:
+          - { 'recipientId': '66c3d3fe189638b81eac7cfd' }
+        additionalProperties: false
