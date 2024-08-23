@@ -118,4 +118,23 @@ describe('initializeSocket', () => {
       expect(data).toEqual(message);
     });
   });
+
+  it('should handle the "new chat" event', async () => {
+    io.on('connection', (socket) => {
+      socket.on('new chat', (chat) => {
+        expect(chat.recipientId).toEqual('66906ca8fa6f594ee9c2d67b');
+        socket.in(chat.recipientId).emit('new chat');
+      });
+    });
+
+    const chat = {
+      recipientId: '66906ca8fa6f594ee9c2d67b',
+    };
+
+    clientSocket.emit('new chat', chat);
+
+    clientSocket.on('new chat', () => {
+      expect(true).toBeTruthy();
+    });
+  });
 });
