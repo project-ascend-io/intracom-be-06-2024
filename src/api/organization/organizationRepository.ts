@@ -10,9 +10,7 @@ export const organizationRepository = {
   insert: async (org: BasicOrganization): Promise<Organization> => {
     try {
       await organizationRepository.startConnection();
-      const newOrg = new OrganizationModel({
-        name: org.name,
-      });
+      const newOrg = new OrganizationModel(org);
       return await newOrg.save();
     } catch (err) {
       console.error('[Error] OrganizationRepository - insert: ', err);

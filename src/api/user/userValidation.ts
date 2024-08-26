@@ -13,6 +13,10 @@ export const PostAdminUserSchema = z.object({
       username: z.string().min(5).openapi({ example: 'johndoe' }),
       organization: commonValidations.organization,
       password: commonValidations.password,
+      instanceUrl: z
+        .string()
+        .url({ message: 'Please provide a valid url.' })
+        .openapi({ example: 'https://www.example.com' }),
     })
     .superRefine(({ password }, checkPassComplexity) => {
       const containsUppercase = (ch: string) => /[A-Z]/.test(ch);
