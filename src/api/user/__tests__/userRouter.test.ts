@@ -164,6 +164,7 @@ describe('User API Endpoints', () => {
         password: 'Testing123!',
         username: 'newUser',
         organization: 'Example Corp.',
+        instanceUrl: 'https://www.example.com',
       };
 
       const userResponse = {
