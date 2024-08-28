@@ -5,6 +5,7 @@ interface EmailOptions {
   port: number;
   username: string;
   password: string;
+  verified_sender_email: string;
   to: string;
   subject: string;
   message: string;
@@ -22,7 +23,7 @@ export const sendTestEmail = async (options: EmailOptions) => {
   } as any);
 
   const mailOptions = {
-    from: 'oscar@projectascend.io',
+    from: options.verified_sender_email,
     to: options.to,
     subject: options.subject,
     html: options.message,
