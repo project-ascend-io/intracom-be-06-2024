@@ -1,4 +1,5 @@
 import { UpdateResult } from 'mongodb';
+import { ObjectId } from 'mongodb';
 
 import { EmailSettingsModel } from '@/api/emailSettings/emailSettingsModel';
 import { EmailSettings, EmailSettingsTest, NewEmailSettings } from '@/api/emailSettings/emailSettingsSchema';
@@ -36,13 +37,19 @@ export const emailSettingsRepository = {
     }
   },
 
-  updateEmailSettings: async (id: string, emailSettings: NewEmailSettings): Promise<UpdateResult<Document> | null> => {
+  updateEmailSettings: async (
+    organization: ObjectId,
+    emailSettings: NewEmailSettings
+  ): Promise<UpdateResult<Document> | null> => {
     try {
       const mongodb = await emailSettingsRepository.startConnection();
       const EmailSettingsCollection = mongodb.model<EmailSettings>('EmailSettings');
 
       const updateData = { $set: emailSettings };
-      const savedEmailSettings = await EmailSettingsCollection.updateOne({ organization: id }, updateData);
+      const savedEmailSettings = await EmailSettingsCollection.updateOne(
+        { organization: organization._id },
+        updateData
+      );
       if (savedEmailSettings.matchedCount === 0) {
         console.log('No email settings found with the given organization id to update.');
         return null;
