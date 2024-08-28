@@ -56,7 +56,7 @@ export const emailSettingsRepository = {
 
   testEmailSettings: async (request: EmailSettingsTest): Promise<boolean> => {
     try {
-      const { server, port, username, password, email } = request;
+      const { server, port, username, password, email, verified_sender_email } = request;
 
       if (!email) {
         return false;
@@ -67,6 +67,7 @@ export const emailSettingsRepository = {
         port: port,
         username: username,
         password: password,
+        verified_sender_email: verified_sender_email,
         to: email,
         subject: 'Test',
         message: 'This is a test email',
