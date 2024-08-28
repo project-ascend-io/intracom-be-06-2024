@@ -12,6 +12,7 @@ export const PostEmailSettingsSchema = z.object({
     port: z.number().openapi({ example: 5432 }),
     username: z.string().openapi({ example: 'root' }),
     password: z.string().openapi({ example: 'apikey' }),
+    verified_sender_email: commonValidations.email,
     securityType: z.string().openapi({ example: 'TLS' }),
     organization: commonValidations.organization,
   }),
@@ -23,8 +24,9 @@ export const PostEmailSettingsTestSchema = z.object({
     port: z.number().openapi({ example: 5432 }),
     username: z.string().openapi({ example: 'root' }),
     password: z.string().openapi({ example: 'apikey' }),
+    verified_sender_email: commonValidations.email,
     securityType: z.string().openapi({ example: 'TLS' }),
-    email: z.string().openapi({ example: 'example@email.com' }),
+    email: commonValidations.email,
   }),
 });
 
