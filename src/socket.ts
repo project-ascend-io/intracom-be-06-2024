@@ -7,7 +7,7 @@ export const initializeSocket = (server: any) => {
   const io = new Server(server, {
     pingTimeout: 60000,
     cors: {
-      origin: ['http://localhost:9000', 'https://admin.socket.io'],
+      origin: ['process.env.CLIENT_SERVER', 'https://admin.socket.io'],
       methods: ['GET', 'POST'],
       credentials: true,
     },
