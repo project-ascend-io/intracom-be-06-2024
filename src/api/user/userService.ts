@@ -115,6 +115,7 @@ export const userService = {
       const savedUser = await organizationRepository
         .insert({
           name: user.organization,
+          instanceUrl: user.instanceUrl,
         })
         .then(async (org) => {
           return await userRepository.insertUserAndOrganization({
