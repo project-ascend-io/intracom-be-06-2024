@@ -55,17 +55,19 @@ export const userService = {
         return new ServiceResponse(ResponseStatus.Failed, `User already exists`, null, StatusCodes.UNAUTHORIZED);
       }
 
-      const savedUser = await userRepository
-        .insertUser({
+      let savedUser;
+
+      try {
+        savedUser = await userRepository.insertUser({
           username: user.username,
           email: userInvite.email,
           password: user.password,
           organization: userInvite.organization._id,
           role,
-        })
-        .catch((err) => {
-          throw new Error(err.message);
         });
+      } catch (err) {
+        throw new Error(err.message);
+      }
 
       const userResponse: UserResponse = {
         _id: savedUser._id,
