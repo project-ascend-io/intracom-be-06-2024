@@ -7,6 +7,7 @@ extendZodWithOpenApi(z);
 
 export const OrganizationSchema = z.object({
   name: z.string().openapi({ example: 'Intracom Company' }),
+  instanceUrl: z.string().url().openapi({ example: 'https://example.com/' }),
 });
 
 export const OrganizationComplete = OrganizationSchema.merge(ModelID);
