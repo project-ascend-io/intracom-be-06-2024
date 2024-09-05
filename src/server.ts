@@ -25,8 +25,9 @@ app.use(express.urlencoded({ extended: true }));
 // Set the application to trust the reverse proxy
 app.set('trust proxy', true);
 
+const validUris = env.CORS_ORIGIN.split(',');
 // Middlewares
-app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+app.use(cors({ origin: validUris, credentials: true }));
 app.use(helmet());
 app.use(rateLimiter);
 
