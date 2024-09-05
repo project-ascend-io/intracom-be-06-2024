@@ -23,6 +23,8 @@ type AuthEndpointTestContext = TestContext & AuthTaskContext;
 
 const testSession = session(app);
 
+export const generateUser = () => {};
+
 describe('Authentication API Endpoints', () => {
   beforeEach(async (context: AuthEndpointTestContext) => {
     const userList: User[] = [];

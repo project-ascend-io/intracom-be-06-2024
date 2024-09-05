@@ -1,8 +1,12 @@
 import { StatusCodes } from 'http-status-codes';
 import mongoose from 'mongoose';
 import request from 'supertest';
+import session from 'supertest-session';
 import { afterEach, beforeEach, describe, expect, it, Mock, TestContext, vi } from 'vitest';
 
+import { authService } from '@/api/auth/authService';
+import { userRoles } from '@/api/user/userModel';
+import { UserResponse } from '@/api/user/userSchema';
 import { inviteState } from '@/api/userInvite/userInviteModel';
 import { UserInvite } from '@/api/userInvite/userInviteSchema';
 import { ServiceResponse } from '@/common/models/serviceResponse';
@@ -10,6 +14,12 @@ import { ResponseStatus } from '@/common/models/serviceResponse';
 import { app } from '@/server';
 
 import { userInviteService } from '../userInviteService';
+
+vi.mock('../../auth/authService', () => ({
+  authService: {
+    login: vi.fn(),
+  },
+}));
 
 vi.mock('../userInviteService', () => ({
   userInviteService: {
@@ -28,7 +38,9 @@ interface UserInviteTaskContext {
 
 type UserInviteTestContext = TestContext & UserInviteTaskContext;
 
+const testSession = session(app);
 describe('User Invite API Endpoints', () => {
+  let authenticatedSession;
   beforeEach(async (context: UserInviteTestContext) => {
     const userInviteList: UserInvite[] = [];
     for (let i: number = 0; i < 10; i++) {
@@ -46,6 +58,32 @@ describe('User Invite API Endpoints', () => {
       });
     }
     context.userInviteList = userInviteList;
+
+    const authUser = userInviteList[0];
+    const userResponse: UserResponse = {
+      _id: authUser._id,
+      email: authUser.email,
+      username: 'billyboy',
+      role: userRoles.Admin,
+      organization: {
+        _id: authUser.organization._id,
+        name: authUser.organization.name,
+      },
+    };
+    const responseMock = new ServiceResponse<UserResponse>(
+      ResponseStatus.Success,
+      'Successfully logged in',
+      userResponse,
+      StatusCodes.OK
+    );
+    (authService.login as Mock).mockReturnValue(responseMock);
+    const credentials = {
+      email: authUser.email,
+      password: 'Testing123!',
+    };
+    const response = await testSession.post('/auth/login').send(credentials).set('Accept', 'application/json');
+    console.log('Response ', response.body);
+    authenticatedSession = testSession;
   });
 
   afterEach(() => {
@@ -67,7 +105,7 @@ describe('User Invite API Endpoints', () => {
       (userInviteService.getInvitesByOrgId as Mock).mockReturnValue(responseMock);
 
       // Act
-      const response = await request(app).get(`/organizations/${testId}/user-invites`);
+      const response = await authenticatedSession.get(`/organizations/${testId}/user-invites`);
       const responseBody: ServiceResponse<UserInvite> = response.body;
 
       // Assert
@@ -89,7 +127,7 @@ describe('User Invite API Endpoints', () => {
       (userInviteService.getInvitesByOrgId as Mock).mockReturnValue(responseMock);
 
       // Act
-      const response = await request(app).get(`/organizations/${testId}/user-invites`);
+      const response = await authenticatedSession.get(`/organizations/${testId}/user-invites`);
       const responseBody: ServiceResponse<UserInvite> = response.body;
 
       // Assert
@@ -111,7 +149,7 @@ describe('User Invite API Endpoints', () => {
       (userInviteService.getInvitesByOrgId as Mock).mockReturnValue(responseMock);
 
       // Act
-      const response = await request(app).get(`/organizations/${testId}/user-invites`).query(params);
+      const response = await authenticatedSession.get(`/organizations/${testId}/user-invites`).query(params);
 
       const responseBody: ServiceResponse<UserInvite> = response.body;
 
@@ -214,7 +252,7 @@ describe('User Invite API Endpoints', () => {
       (userInviteService.insertInvites as Mock).mockReturnValue(responseMock);
 
       // Act
-      const response = await request(app).post(`/organizations/${orgId}/user-invites`).send(userEmails);
+      const response = await authenticatedSession.post(`/organizations/${orgId}/user-invites`).send(userEmails);
       const responseBody: ServiceResponse<UserInvite[]> = response.body;
 
       // Assert
@@ -238,7 +276,7 @@ describe('User Invite API Endpoints', () => {
       (userInviteService.insertInvites as Mock).mockReturnValue(responseMock);
 
       // Act
-      const response = await request(app).post(`/organizations/${orgId}/user-invites`).send(userEmails);
+      const response = await authenticatedSession.post(`/organizations/${orgId}/user-invites`).send(userEmails);
       const responseBody: ServiceResponse<UserInvite[]> = response.body;
 
       // Assert
@@ -262,7 +300,7 @@ describe('User Invite API Endpoints', () => {
       (userInviteService.insertInvites as Mock).mockReturnValue(responseMock);
 
       // Act
-      const response = await request(app).post(`/organizations/${orgId}/user-invites`).send(userEmails);
+      const response = await authenticatedSession.post(`/organizations/${orgId}/user-invites`).send(userEmails);
       const responseBody: ServiceResponse<UserInvite[]> = response.body;
 
       // Assert
@@ -286,7 +324,7 @@ describe('User Invite API Endpoints', () => {
       (userInviteService.insertInvites as Mock).mockReturnValue(responseMock);
 
       // Act
-      const response = await request(app).post(`/organizations/${orgId}/user-invites`).send(userEmails);
+      const response = await authenticatedSession.post(`/organizations/${orgId}/user-invites`).send(userEmails);
       const responseBody: ServiceResponse<UserInvite[]> = response.body;
 
       // Assert
@@ -307,7 +345,7 @@ describe('User Invite API Endpoints', () => {
       (userInviteService.insertInvites as Mock).mockReturnValue(responseMock);
 
       // Act
-      const response = await request(app).post(`/organizations/${orgId}/user-invites`);
+      const response = await authenticatedSession.post(`/organizations/${orgId}/user-invites`);
       const responseBody: ServiceResponse<UserInvite[]> = response.body;
 
       // Assert
@@ -348,7 +386,7 @@ describe('User Invite API Endpoints', () => {
       (userInviteService.updateById as Mock).mockReturnValue(responseMock);
 
       // Act
-      const response = await request(app).patch(`/organizations/${orgId}/user-invites/${id}/`).send(state);
+      const response = await authenticatedSession.patch(`/organizations/${orgId}/user-invites/${id}/`).send(state);
       const responseBody: ServiceResponse<UserInvite> = response.body;
 
       // Assert
@@ -372,7 +410,7 @@ describe('User Invite API Endpoints', () => {
       (userInviteService.updateById as Mock).mockReturnValue(responseMock);
 
       // Act
-      const response = await request(app).patch(`/organizations/${orgId}/user-invites/${id}/`).send(newState);
+      const response = await authenticatedSession.patch(`/organizations/${orgId}/user-invites/${id}/`).send(newState);
       const responseBody: ServiceResponse<UserInvite> = response.body;
 
       // Assert
@@ -398,7 +436,7 @@ describe('User Invite API Endpoints', () => {
       (userInviteService.updateById as Mock).mockReturnValue(responseMock);
 
       // Act
-      const response = await request(app).patch(`/organizations/${orgId}/user-invites/${id}/`).send(state);
+      const response = await authenticatedSession.patch(`/organizations/${orgId}/user-invites/${id}/`).send(state);
       const responseBody: ServiceResponse<UserInvite> = response.body;
 
       // Assert
@@ -506,7 +544,7 @@ describe('User Invite API Endpoints', () => {
       (userInviteService.deleteById as Mock).mockReturnValue(responseMock);
 
       // Act
-      const response = await request(app).delete(`/organizations/${orgId}/user-invites/${id}/`);
+      const response = await authenticatedSession.delete(`/organizations/${orgId}/user-invites/${id}/`);
 
       // Assert
       expect(response.statusCode).toEqual(StatusCodes.NO_CONTENT);
@@ -528,7 +566,7 @@ describe('User Invite API Endpoints', () => {
       (userInviteService.deleteById as Mock).mockReturnValue(responseMock);
 
       // Act
-      const response = await request(app).delete(`/organizations/${orgId}/user-invites/${id}/`).send(state);
+      const response = await authenticatedSession.delete(`/organizations/${orgId}/user-invites/${id}/`).send(state);
       const responseBody: ServiceResponse<UserInvite> = response.body;
 
       // Assert
@@ -553,7 +591,7 @@ describe('User Invite API Endpoints', () => {
       (userInviteService.deleteById as Mock).mockReturnValue(responseMock);
 
       // Act
-      const response = await request(app).delete(`/organizations/${orgId}/user-invites/${id}/`).send(state);
+      const response = await authenticatedSession.delete(`/organizations/${orgId}/user-invites/${id}/`).send(state);
       const responseBody: ServiceResponse<UserInvite> = response.body;
 
       // Assert
