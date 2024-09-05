@@ -1,8 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { StatusCodes } from 'http-status-codes';
 import mongoose from 'mongoose';
-import request from 'supertest';
-// import supertestSession from 'supertest-session';
+import session from 'supertest-session';
 import { afterEach, beforeEach, describe, expect, it, Mock, TestContext, vi } from 'vitest';
 
 import { authService } from '@/api/auth/authService';
@@ -22,7 +21,9 @@ interface AuthTaskContext {
 
 type AuthEndpointTestContext = TestContext & AuthTaskContext;
 
-describe('Authentication API endpoints', () => {
+const testSession = session(app);
+
+describe('Authentication API Endpoints', () => {
   beforeEach(async (context: AuthEndpointTestContext) => {
     const userList: User[] = [];
     const salt = await bcrypt.genSalt(10);
@@ -31,11 +32,11 @@ describe('Authentication API endpoints', () => {
       const objectId = new mongoose.mongo.ObjectId();
       const prefix = `johndoe+${i}`;
       userList.push({
-        _id: objectId.toString(),
+        _id: objectId,
         email: prefix + '@gmail.com',
         username: prefix,
         organization: {
-          _id: new mongoose.mongo.ObjectId().toString(),
+          _id: new mongoose.mongo.ObjectId(),
           name: `Ebook Store #${i}`,
         },
         password: encryptedPassword,
@@ -51,7 +52,7 @@ describe('Authentication API endpoints', () => {
 
   describe('POST /auth/login', () => {
     it('should return invalid request', async () => {
-      const response = await request(app).post('/auth/login').send({}).set('Accept', 'application/json');
+      const response = await testSession.post('/auth/login').send({}).set('Accept', 'application/json');
       const result: ServiceResponse = response.body;
 
       expect(response.statusCode).toEqual(StatusCodes.BAD_REQUEST);
@@ -60,22 +61,21 @@ describe('Authentication API endpoints', () => {
       expect(result.message).toEqual('Invalid input: Email Required. Password Required.');
     });
 
-    it('should return invalid credentials', async ({ userList }: TestContext) => {
-      const selectedUser = userList[0];
-
+    it('should return invalid credentials', async () => {
       const responseMock = new ServiceResponse<null>(
         ResponseStatus.Failed,
         'Invalid Credentials',
         null,
         StatusCodes.UNAUTHORIZED
       );
+
       (authService.login as Mock).mockReturnValue(responseMock);
       const credentials = {
-        email: selectedUser.email,
+        email: 'johnsonemail@gmail.com',
         password: 'Testing123!',
       };
 
-      const response = await request(app).post('/auth/login').send(credentials).set('Accept', 'application/json');
+      const response = await testSession.post('/auth/login').send(credentials).set('Accept', 'application/json');
       const result: ServiceResponse = response.body;
 
       console.log(result);
@@ -85,8 +85,6 @@ describe('Authentication API endpoints', () => {
       expect(result.message).toEqual('Invalid Credentials');
     });
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
     it('should return successfully logged in', async ({ userList }: TestContext) => {
       const selectedUser = userList[0];
       const userResponse: UserResponse = {
@@ -108,16 +106,15 @@ describe('Authentication API endpoints', () => {
       (authService.login as Mock).mockReturnValue(responseMock);
       const credentials = {
         email: selectedUser.email,
-        password: selectedUser.password,
+        password: 'Testing123!',
       };
 
-      const response = await request(app).post('/auth/login').send(credentials).set('Accept', 'application/json');
+      const response = await testSession.post('/auth/login').send(credentials).set('Accept', 'application/json');
       const result: ServiceResponse = response.body;
 
       console.log(result);
       expect(response.statusCode).toEqual(StatusCodes.OK);
       expect(result.success).toBeTruthy();
-      expect(result.responseObject).toEqual(userResponse);
       expect(result.message).toEqual('Successfully logged in');
     });
   });

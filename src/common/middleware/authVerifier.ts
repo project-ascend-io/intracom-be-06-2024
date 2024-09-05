@@ -2,14 +2,12 @@ import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
-import { env } from '@/common/utils/envConfig';
-const { NODE_ENV } = env;
 
 export const verifyAuthentication = (_req: Request, res: Response, next: NextFunction) => {
   const hasSession = !!_req.session.userId;
   const hasSessionExpired = false; // @todo check expiration date
 
-  if (NODE_ENV == 'test' || (hasSession && !hasSessionExpired)) {
+  if (hasSession && !hasSessionExpired) {
     next();
   } else {
     const statusCode = StatusCodes.UNAUTHORIZED;
