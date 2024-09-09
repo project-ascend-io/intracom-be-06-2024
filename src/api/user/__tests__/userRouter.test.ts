@@ -17,6 +17,7 @@ vi.mock('../userService', () => ({
     findById: vi.fn(),
     insertUserAndOrganization: vi.fn(),
     signup: vi.fn(),
+    insertUser: vi.fn(),
   },
 }));
 
@@ -105,7 +106,6 @@ describe('User API Endpoints', () => {
       if (!expectedUser) throw new Error('Invalid test data: expectedUser is undefined');
       compareUsers(expectedUser, responseBody.responseObject);
     });
-
     it('should return a not found error for non-existent ID', async () => {
       // Arrange
       const objectId = new mongoose.mongo.ObjectId();
@@ -128,7 +128,6 @@ describe('User API Endpoints', () => {
       expect(responseBody.message).toContain('User not found');
       expect(responseBody.responseObject).toBeNull();
     });
-
     it('should return a bad request for invalid ID format', async () => {
       // Act
       const invalidInput = 1;
@@ -156,7 +155,6 @@ describe('User API Endpoints', () => {
 
       expect(response.statusCode).toEqual(StatusCodes.BAD_REQUEST);
     });
-
     it('should return the newly created user', async () => {
       // Act
       const newUser: PostAdminUser = {
@@ -197,14 +195,128 @@ describe('User API Endpoints', () => {
       });
     });
   });
-});
 
-function compareUsers(mockUser: User | UserResponse, responseUser: User | UserResponse) {
-  if (!mockUser || !responseUser) {
-    throw new Error('Invalid test data: mockUser or responseUser is undefined');
+  describe('POST /signup', () => {
+    it('should return user created', async () => {
+      // Act
+      const newUser: PostUser = {
+        hash: 'ef7ab856499e3207f51',
+        username: 'newUser@gmail.com',
+        password: 'Testing123!',
+      };
+
+      const userResponse = {
+        _id: new mongoose.mongo.ObjectId(),
+        username: newUser.username,
+        email: newUser.username,
+        role: userRoles.User,
+        organization: {
+          _id: new mongoose.mongo.ObjectId(),
+          name: 'Example Corp.',
+        },
+      };
+
+      const responseMock = new ServiceResponse<UserResponse>(
+        ResponseStatus.Success,
+        'User created.',
+        userResponse,
+        StatusCodes.CREATED
+      );
+      (userService.insertUser as Mock).mockReturnValue(responseMock);
+
+      // Assert
+      const response = await request(app).post(`/users/signup`).send(newUser);
+
+      expect(response.statusCode).toEqual(StatusCodes.CREATED);
+      const responseBody: ServiceResponse<UserResponse> = response.body;
+      expect(responseBody.message).toContain('User created.');
+      expect(responseBody.responseObject).toMatchObject({
+        email: 'newUser@gmail.com',
+        username: 'newUser@gmail.com',
+        role: userRoles.User,
+      });
+    });
+    it('should return User invite not found', async () => {
+      // Act
+      const newUser: PostUser = {
+        hash: 'ef7ab856499e3207f51',
+        username: 'newUser@gmail.com',
+        password: 'Testing123!',
+      };
+
+      const responseMock = new ServiceResponse<UserResponse | null>(
+        ResponseStatus.Failed,
+        'User invite not found',
+        null,
+        StatusCodes.UNAUTHORIZED
+      );
+      (userService.insertUser as Mock).mockReturnValue(responseMock);
+
+      // Assert
+      const response = await request(app).post(`/users/signup`).send(newUser);
+
+      expect(response.statusCode).toEqual(StatusCodes.UNAUTHORIZED);
+      const responseBody: ServiceResponse<UserResponse> = response.body;
+      expect(responseBody.message).toContain('User invite not found');
+      expect(responseBody.responseObject).toBe(null);
+    });
+    it('should return User invite expired', async () => {
+      // Act
+      const newUser: PostUser = {
+        hash: 'ef7ab856499e3207f51',
+        username: 'newUser@gmail.com',
+        password: 'Testing123!',
+      };
+
+      const responseMock = new ServiceResponse<UserResponse | null>(
+        ResponseStatus.Failed,
+        'User invite expired',
+        null,
+        StatusCodes.UNAUTHORIZED
+      );
+      (userService.insertUser as Mock).mockReturnValue(responseMock);
+
+      // Assert
+      const response = await request(app).post(`/users/signup`).send(newUser);
+
+      expect(response.statusCode).toEqual(StatusCodes.UNAUTHORIZED);
+      const responseBody: ServiceResponse<UserResponse> = response.body;
+      expect(responseBody.message).toContain('User invite expired');
+      expect(responseBody.responseObject).toBe(null);
+    });
+    it('should return User already exists', async () => {
+      // Act
+      const newUser: PostUser = {
+        hash: 'ef7ab856499e3207f51',
+        username: 'newUser@gmail.com',
+        password: 'Testing123!',
+      };
+
+      const responseMock = new ServiceResponse<UserResponse | null>(
+        ResponseStatus.Failed,
+        'User invite already exists',
+        null,
+        StatusCodes.UNAUTHORIZED
+      );
+      (userService.insertUser as Mock).mockReturnValue(responseMock);
+
+      // Assert
+      const response = await request(app).post(`/users/signup`).send(newUser);
+
+      expect(response.statusCode).toEqual(StatusCodes.UNAUTHORIZED);
+      const responseBody: ServiceResponse<UserResponse> = response.body;
+      expect(responseBody.message).toContain('User invite already exists');
+      expect(responseBody.responseObject).toBe(null);
+    });
+  });
+
+  function compareUsers(mockUser: User | UserResponse, responseUser: User | UserResponse) {
+    if (!mockUser || !responseUser) {
+      throw new Error('Invalid test data: mockUser or responseUser is undefined');
+    }
+
+    expect(responseUser._id.toString()).toEqual(mockUser._id.toString());
+    expect(responseUser.username).toEqual(mockUser.username);
+    expect(responseUser.email).toEqual(mockUser.email);
   }
-
-  expect(responseUser._id.toString()).toEqual(mockUser._id.toString());
-  expect(responseUser.username).toEqual(mockUser.username);
-  expect(responseUser.email).toEqual(mockUser.email);
-}
+});
