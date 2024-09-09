@@ -5,7 +5,7 @@ import { userRepository } from '@/api/user/userRepository';
 import { User, UserResponse } from '@/api/user/userSchema';
 import { PostAdminUser, PostUser } from '@/api/user/userValidation';
 import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse';
-import { logger } from '@/server';
+import logger from '@/common/utils/logConfig';
 
 import { userInviteRepository } from '../userInvite/userInviteRepository';
 import { isValid } from '../userInvite/userInviteService';
