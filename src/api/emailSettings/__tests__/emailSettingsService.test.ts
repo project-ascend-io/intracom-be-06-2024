@@ -1,4 +1,6 @@
 import { StatusCodes } from 'http-status-codes';
+import mongoose from 'mongoose';
+import { describe, expect, it, vi } from 'vitest';
 
 import { emailSettingsRepository } from '@/api/emailSettings/emailSettingsRepository';
 import { EmailSettings } from '@/api/emailSettings/emailSettingsSchema';
@@ -20,7 +22,9 @@ describe('emailSettingsService', () => {
     port: 5432,
     username: 'root',
     password: 'securepassword',
+    verified_sender_email: 'john@example.com',
     securityType: 'TLS',
+    organization: new mongoose.mongo.ObjectId('66c3d2fc189638b81eac7cee'),
   };
 
   describe('findById', () => {
@@ -29,7 +33,7 @@ describe('emailSettingsService', () => {
       vi.spyOn(emailSettingsRepository, 'findByIdAsync').mockReturnValue(Promise.resolve(mockEmailSettings));
 
       // Act
-      const result = await emailSettingsService.findById('0');
+      const result = await emailSettingsService.findById('66c3d2fc189638b81eac7cee');
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.OK);
@@ -41,18 +45,11 @@ describe('emailSettingsService', () => {
     it('returns a not found error for no email settings found', async () => {
       // Arrange
       vi.spyOn(emailSettingsService, 'findById').mockResolvedValue(
-        new ServiceResponse<{
-          _id: string;
-          server: string;
-          port: number;
-          username: string;
-          password: string;
-          securityType: string;
-        } | null>(ResponseStatus.Failed, 'No Email Settings found', null, StatusCodes.NOT_FOUND)
+        new ServiceResponse<null>(ResponseStatus.Failed, 'No Email Settings found', null, StatusCodes.NOT_FOUND)
       );
 
       // Act
-      const result = await emailSettingsService.findById('0');
+      const result = await emailSettingsService.findById('66c3d2fc189638b81eac7cee');
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.NOT_FOUND);
@@ -64,18 +61,16 @@ describe('emailSettingsService', () => {
     it('handles errors for findById', async () => {
       // Arrange
       vi.spyOn(emailSettingsService, 'findById').mockResolvedValue(
-        new ServiceResponse<{
-          _id: string;
-          server: string;
-          port: number;
-          username: string;
-          password: string;
-          securityType: string;
-        } | null>(ResponseStatus.Failed, 'No Email Settings found', null, StatusCodes.INTERNAL_SERVER_ERROR)
+        new ServiceResponse<null>(
+          ResponseStatus.Failed,
+          'No Email Settings found',
+          null,
+          StatusCodes.INTERNAL_SERVER_ERROR
+        )
       );
 
       // Act
-      const result = await emailSettingsService.findById('231232141');
+      const result = await emailSettingsService.findById('66c3d2fc189638b81eac7cee');
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.INTERNAL_SERVER_ERROR);

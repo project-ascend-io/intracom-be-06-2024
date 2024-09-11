@@ -13,6 +13,7 @@ export const NewEmailSettingsSchema = z.object({
   port: z.number().openapi({ example: 5432 }),
   username: z.string().openapi({ example: 'root' }),
   password: z.string().openapi({ example: 'apikey' }),
+  verified_sender_email: z.string().openapi({ example: 'john@example.com' }),
   securityType: z.string().openapi({ example: 'TLS' }),
   organization: z.string().openapi({ example: '668f0c2ce629' }),
 });
@@ -23,8 +24,9 @@ export const EmailSettingsSchema = z.object({
   port: z.number().openapi({ example: 5432 }),
   username: z.string().openapi({ example: 'root' }),
   password: z.string().openapi({ example: 'securepassword' }),
+  verified_sender_email: z.string().openapi({ example: 'john@example.com' }),
   securityType: z.string().openapi({ example: 'TLS' }),
-  organization: z.string().openapi({ example: '668f0c2ce629' }),
+  organization: z.instanceof(ObjectId),
 });
 
 export const EmailSettingsTestSchema = z.object({
@@ -32,6 +34,7 @@ export const EmailSettingsTestSchema = z.object({
   port: z.number().openapi({ example: 5432 }),
   username: z.string().openapi({ example: 'root' }),
   password: z.string().openapi({ example: 'securepassword' }),
+  verified_sender_email: z.string().openapi({ example: 'john@example.com' }),
   securityType: z.string().openapi({ example: 'TLS' }),
   email: z.string().openapi({ example: 'email@example.com' }),
 });
