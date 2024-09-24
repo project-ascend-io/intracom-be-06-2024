@@ -1,3 +1,9 @@
+## [1.0.1](https://github.com/project-ascend-io/intracom-be-06-2024/compare/v1.0.0...v1.0.1) (2024-09-24)
+
+### Bug Fixes
+
+- **server.ts:** update env check to production ([570ceea](https://github.com/project-ascend-io/intracom-be-06-2024/commit/570ceeae6f8ea8c0937fcce1e6c6805b8510d3d0))
+
 # 1.0.0 (2024-09-24)
 
 ### Bug Fixes

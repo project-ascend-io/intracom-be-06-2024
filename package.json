@@ -1,6 +1,6 @@
 {
   "name": "intracom-be-06-2024",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Intracom will be an open-source internal communication tool designed to be economically accessible and customizable for startups, nonprofits, and small companies.",
   "main": "index.ts",
   "private": true,
