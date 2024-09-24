@@ -82,7 +82,7 @@
     "**/*.{js,ts}": "npm run lint:fix"
   },
   "author": "Project Ascend",
-  "repository": "project-ascend-io/intracom-06-2024",
+  "repository": "project-ascend-io/intracom-be-06-2024",
   "license": "ISC",
   "config": {
     "commitizen": {
