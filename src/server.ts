@@ -51,7 +51,7 @@ app.use('/user-invites', userInviteRouter);
 app.use('/organizations', userInviteRouter);
 
 // Swagger UI
-if (NODE_ENV == 'development') {
+if (NODE_ENV !== 'production') {
   app.use('/api-docs', openAPIRouter);
 }
 
