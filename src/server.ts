@@ -14,6 +14,8 @@ import errorHandler from '@/common/middleware/errorHandler';
 import rateLimiter from '@/common/middleware/rateLimiter';
 import requestLogger from '@/common/middleware/requestLogger';
 import { env } from '@/common/utils/envConfig';
+const { NODE_ENV } = env;
+
 import { sessionConfiguration } from '@/common/utils/sessionConfig';
 
 const logger = pino({ name: 'server start' });
@@ -49,7 +51,9 @@ app.use('/user-invites', userInviteRouter);
 app.use('/organizations', userInviteRouter);
 
 // Swagger UI
-app.use('/api-docs', openAPIRouter);
+if (NODE_ENV == 'development') {
+  app.use('/api-docs', openAPIRouter);
+}
 
 // Error handlers
 app.use(errorHandler());
