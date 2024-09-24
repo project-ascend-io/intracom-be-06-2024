@@ -17,7 +17,7 @@
     "test:dev": "vitest dev",
     "test:cov": "vitest run --coverage",
     "release": "semantic-release",
-    "release-test": "semantic-release --dry-run",
+    "release-test": "semantic-release --tags",
     "prepare": "husky"
   },
   "dependencies": {
