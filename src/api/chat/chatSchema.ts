@@ -27,6 +27,7 @@ export const ChatSchema = z.object({
     .array()
     .openapi({ example: ['66b14242e9a75ff13a66027a', '66b14242e9a75ff13a66027b'] }),
   chatAdmin: z.null().openapi({ example: null }),
+  lastMessage: z.instanceof(ObjectId),
 });
 
 export type NewChat = z.infer<typeof NewChatSchema>;
