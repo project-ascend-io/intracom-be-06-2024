@@ -45,9 +45,10 @@ export const chatRepository = {
         return isChat[0];
       } else {
         const personToChatWith = await UserModel.findOne({ _id: recipientId });
+        const personStartingChat = await UserModel.findOne({ _id: creatorId });
 
         const chatData = {
-          chatName: personToChatWith?.username,
+          chatName: `${personToChatWith?.username} and ${personStartingChat?.username}`,
           isChannel: false,
           users: [recipientId, creatorId],
         };
