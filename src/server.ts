@@ -22,7 +22,6 @@ import { sessionConfiguration } from '@/common/utils/sessionConfig';
 const logger = pino({ name: 'server start' });
 const app: Express = express();
 const socketDocsPath = path.join(__dirname, './socket-docs');
-console.log(socketDocsPath);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
