@@ -7,7 +7,7 @@ export const initializeSocket = (server: any) => {
   const io = new Server(server, {
     pingTimeout: 60000,
     cors: {
-      origin: ['process.env.CLIENT_SERVER', 'https://admin.socket.io'],
+      origin: [`${process.env.CLIENT_SERVER}`, 'https://admin.socket.io'],
       methods: ['GET', 'POST'],
       credentials: true,
     },
@@ -22,8 +22,8 @@ export const initializeSocket = (server: any) => {
     logger.info(`connected ${socket.id}`);
 
     socket.on('setup', (userData) => {
-      socket['data'] = userData;
       socket.join(userData._id);
+      socket.data.username = userData.username;
       socket.emit('connected');
     });
 
