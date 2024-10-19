@@ -57,7 +57,7 @@ export const chatRepository = {
           const createChat = new ChatModel(chatData);
           await createChat.save();
 
-          const findChat = await ChatModel.findById(createChat._id);
+          const findChat = await ChatModel.findById(createChat._id).populate('users', '-password');
 
           if (!findChat) {
             throw new Error('Chat not found');
