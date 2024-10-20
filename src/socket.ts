@@ -1,12 +1,13 @@
 import { instrument } from '@socket.io/admin-ui';
+import { ChangeStreamDocument } from 'mongodb';
+import mongoose, { Document } from 'mongoose';
 import { Server } from 'socket.io';
 
 import { logger } from '@/server';
-import { mongoDatabase } from './api/mongoDatabase';
-import mongoose, { Document } from 'mongoose';
-import { ChangeStreamDocument } from 'mongodb'
+
 import { ChatModel } from './api/chat/chatModel';
 import { MessageModel } from './api/message/messageModel';
+import { mongoDatabase } from './api/mongoDatabase';
 import { UserModel } from './api/user/userModel';
 import { User } from './api/user/userSchema';
 
@@ -67,51 +68,58 @@ export const initializeSocket = (server: any) => {
 
     collections.forEach((collectionName) => {
       const collection = database.collection(collectionName);
-      const options = { fullDocument: "updateLookup" };
+      const options = { fullDocument: 'updateLookup' };
       const pipeline: Array<Document> = [];
       const changeStream = collection.watch(pipeline, options);
 
       changeStream.on('change', async (change: ChangeStreamDocument<any>) => {
-
-        if ((change.operationType === 'insert' || change.operationType === 'update')) {
+        if (change.operationType === 'insert' || change.operationType === 'update') {
           const { fullDocument } = change;
 
+          /* eslint-disable no-case-declarations */
           switch (collectionName) {
             case 'chats':
-              const populatedChat = await ChatModel.populate(fullDocument, { path: 'users', select: '-password' });
+              const populatedChat = await ChatModel.populate(fullDocument, { path: 'users', select: '_id username' });
 
               if (populatedChat) {
                 const usersInChat: User[] = await UserModel.find({ _id: { $in: populatedChat.users } });
                 usersInChat.forEach((user) => {
-                  io.to(`${user._id}`).emit("chats change", populatedChat);
+                  io.to(`${user._id}`).emit('chats change', populatedChat);
                 });
               }
               break;
             case 'messages':
-              const populatedMessage = await MessageModel.populate(fullDocument, { path: 'sender', select: '-password' });
+              const populatedMessage = await MessageModel.populate(fullDocument, {
+                path: 'sender',
+                select: '_id username',
+              });
               const chatMessageBelongsTo = await ChatModel.findById(populatedMessage.chat);
 
               if (chatMessageBelongsTo) {
                 chatMessageBelongsTo.users.forEach((user) => {
-                  io.to(`${user}`).emit("messages change", populatedMessage);
+                  io.to(`${user}`).emit('messages change', populatedMessage);
                 });
               }
               break;
             case 'users':
-              io.emit(`${collectionName} change`, fullDocument);
+              const filteredUserDocument = {
+                _id: fullDocument._id,
+                username: fullDocument.username,
+              };
+              io.emit(`${collectionName} change`, filteredUserDocument);
               break;
             default:
-              logger.warn(`Unhandled collection: ${collectionName}`)
+              logger.warn(`Unhandled collection: ${collectionName}`);
           }
-
+          /* eslint-enable no-case-declarations */
         } else if (change.operationType === 'delete') {
           io.emit(`${collectionName} delete`, change.documentKey._id);
         }
 
         logger.info(`${change.operationType.toLocaleUpperCase()} change detected in ${collectionName}`);
-      })
-    })
-  }
+      });
+    });
+  };
 
   watchCollections();
 
