@@ -121,7 +121,7 @@ export const initializeSocket = (server: any) => {
     });
   };
 
-  watchCollections();
+  // watchCollections();
 
   return io;
 };
