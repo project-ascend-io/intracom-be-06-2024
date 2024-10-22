@@ -1,200 +1,260 @@
 asyncapi: '2.0.0'
-# id: 'urn:uuid:123e4567-e89b-12d3-a456-426614174000'
-# defaultContentType: 'application/json'
+id: 'urn:uuid:123e4567-e89b-12d3-a456-426614174000'
+defaultContentType: 'application/json'
 info:
   title: Intracom Socket.io API
   version: '1.0.0'
   description: Documentation for the Socket.io API of the Intracom project.
-  # contact:
-  #   name: API Support
-  #   url: 'http://www.example.com/support'
-  #   email: 'support@example.com'
-  # license:
-  #   name: Apache 2.0
-  #   url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
-# tags:
-#   - name: socket.io
-#     description: Events related to socket.io
+  contact:
+    name: API Support
+    url: 'http://www.example.com/support'
+    email: 'support@example.com'
+  license:
+    name: Apache 2.0
+    url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: socket.io
+    description: Events related to socket.io
 
 servers:
   development:
-    url: ws://localhost:9000
+    url: ws://localhost:8080
     protocol: wss
   production:
-    url: 'http://www.example.com/'
+    url: 'http://www.example.com'
     protocol: wss
 
 channels:
-  client/on(connected):
+  client/on_connect:
     description: |
-      Event received from server indicating the client is connected in response to the client emitting the setup event. 
+      Event received from server indicating the client is connected to the socket server after the initial io connection happens. 
+
+      Here is an example of how to handle consuming the on(connect) event in your client code in React:
+
+      ```javascript
+      socketInstance.on("connect", () => {
+        socketInstance.emit("setup", user);
+      });
+      ```
+    subscribe:
+      operationId: on_connect
+      message:
+        $ref: '#/components/messages/empty'
+
+  client/on_connected:
+    description: |
+      Event received from server indicating the client socket is connected and setup. 
 
       Here is an example of how to handle consuming the on(connected) event in your client code in React:
 
       ```javascript
-      socket.on("connected", setSocketConnected(true));
+      socketInstance.on("connected", setSocket(socketInstance));
       ```
     subscribe:
-      operationId: on(connected)
+      operationId: on_connected
       message:
         $ref: '#/components/messages/empty'
 
-  client/on(typing):
+  client/on_disconnect:
+    description: |
+      Event received from server indicating the client has disconnected from the socket server. 
+
+      Here is an example of how to handle consuming the on(disconnect) event in your client code in React:
+
+      ```javascript
+      socketInstance.on("disconnect", () => {
+        setSocket(null);
+      });
+      ```
+    subscribe:
+      operationId: on_disconnect
+      message:
+        $ref: '#/components/messages/empty'
+
+  client/on_typing:
     description: |
       Event received from server indicating the user is typing in response to a client emitting the typing event. 
 
       Here is an example of how to handle consuming the on(typing) event in your client code in React:
 
       ```javascript
-      socket.on("typing", setIsTyping(true));
+      socketInstance.on("typing", setIsTyping(true));
       ```
     subscribe:
-      operationId: on(typing)
+      operationId: on_typing
       message:
         $ref: '#/components/messages/empty'
 
-  client/on(stop_typing):
+  client/on_stop_typing:
     description: |
       Event received from server indicating the user has stopped typing in response to a client emitting the stop_typing event. 
 
       Here is an example of how to handle consuming the on(stop typing) event in your client code in React:
 
       ```javascript
-      socket.on("stop typing", setIsTyping(false));
+      socketInstance.on("stop typing", setIsTyping(false));
       ```
     subscribe:
-      operationId: on(stop_typing)
+      operationId: on_stop_typing
       message:
         $ref: '#/components/messages/empty'
 
-  client/on(message_received):
+  client/on_chats_change:
     description: |
-      Event received from server when a message is sent to the client in response to the client emitting the new_message event. 
+      Event received from server indicating the chat collections has a change. 
 
-      Here is an example of how to handle a on(message received) in your client code in React:
+      Here is an example of how to handle consuming the on(chats change) event in your client code in React:
 
       ```javascript
-      socket.on("message received", (newMessage) => {
-        if(newMessage.chat._id === selectedChat._id) {
-          setCurrentChatMessages([...messages, newMessage]);
-        } else {
-          if(!UnreadMessages.contains(newMessage)) {
-            setUnreadMessages([...unreadMessages, newMessage]);
-          }
-        }
-        setMessages([...messages, newMessage]);
+      socketInstance.on("chats change", (chat) => {
+        setFilteredConversations(null);
+        setConversations((prevConversations) => [...prevConversations, chat]);
       });
       ```
     subscribe:
-      operationId: on(message_received)
+      operationId: on_chats_change
       message:
-        $ref: '#/components/messages/message_received'
+        $ref: '#/components/messages/chat'
 
-  client/on(new_chat):
+  client/on_chats_delete:
     description: |
-      Event received from server when a new chat room is created in response to the client emitting the new_chat event. 
+      Event received from server indicating the chat collections has a chat deleted. 
 
-      Here is an example of how to handle consuming the on(new chat) event in your client code in React:
+      Here is an example of how to handle consuming the on(chats delete) event in your client code in React:
 
       ```javascript
-      socket.on("new chat", () => {
-        const chats = fetchChats();
-        setChats(chats);
-      })
+      socketInstance.on("chats delete", (deletedChatId) => {
+        setConversations((prevConversations) =>
+          prevConversations.filter(
+            (conversation) => conversation._id !== deletedChatId,
+          ),
+        );
+        const currentChatId = sessionStorage.getItem("currentlySelectedChat");
+        if (JSON.parse(currentChatId)._id === deletedChatId) {
+          setCurrentlySelectedChat(null);
+          navigate("/messages");
+        }
+      });
       ```
     subscribe:
-      operationId: on(new_chat)
+      operationId: on_chats_delete
       message:
-        $ref: '#/components/messages/empty'
+        $ref: '#/components/messages/documentId'
 
-  client/emit(setup):
+  client/on_messages_change:
     description: |
-      Event sent from a client when they want to set up their connection to the socket server.
+      Event received from server indicating the messages collections has a change. 
 
-      Here is an example of how to handle publishing the emit(setup) event in your client code in React:
+      Here is an example of how to handle consuming the on(messages change) event in your client code in React:
 
       ```javascript
-      socket.emit("setup", user);
+      socketInstance.on("messages change", (message) => {
+        const currentChatId = sessionStorage.getItem("currentlySelectedChat");
+        if (JSON.parse(currentChatId)._id === message.chat) {
+          setMessages((prevMessages) => [...prevMessages, message]);
+        }
+      });
       ```
-    publish:
-      operationId: emit(setup)
+    subscribe:
+      operationId: on_messages_change
       message:
-        $ref: '#/components/messages/setup'
+        $ref: '#/components/messages/message'
 
-  client/emit(join_room):
+  client/on_messages_delete:
+    description: |
+      Event received from server indicating the messages collections has a message deleted. 
+
+      Here is an example of how to handle consuming the on(messages delete) event in your client code in React:
+
+      ```javascript
+      socketInstance.on("messages delete", (deletedMessageId) => {
+        setMessages((prevMessages) =>
+          prevMessages.filter((message) => message._id !== deletedMessageId),
+        );
+      });
+      ```
+    subscribe:
+      operationId: on_messages_delete
+      message:
+        $ref: '#/components/messages/documentId'
+
+  client/on_users_change:
+    description: |
+      Event received from server indicating the users collections has a change. 
+
+      Here is an example of how to handle consuming the on(users change) event in your client code in React:
+
+      ```javascript
+      socketInstance.on("users change", (user) => {
+        setUsers((prevUsers) => [...prevUsers, user]);
+      });
+      ```
+    subscribe:
+      operationId: on_users_change
+      message:
+        $ref: '#/components/messages/user'
+
+  client/on_users_delete:
+    description: |
+      Event received from server indicating the users collections has a user deleted. 
+
+      Here is an example of how to handle consuming the on(users delete) event in your client code in React:
+
+      ```javascript
+      socketInstance.on("users delete", (deletedUserId) => {
+        setCurrentUsers((prevUsers) => {
+          return prevUsers.filter((user) => user._id !== deletedUserId);
+        });
+        setFilteredCurrentUsers(null);
+      });
+      ```
+    subscribe:
+      operationId: on_users_delete
+      message:
+        $ref: '#/components/messages/documentId'
+
+  client/emit_join_room:
     description: |
       Event sent from a client when they want to join a chat room.
 
       Here is an example of how to handle publishing the emit(join room) event in your client code in React:
 
       ```javascript
-      socket.emit("join room", room);
+      socketInstance.emit("join room", room);
       ```
     publish:
-      operationId: emit(join_room)
+      operationId: emit_join_room
       message:
         $ref: '#/components/messages/join_room'
 
-  client/emit(stop_typing):
+  client/emit_stop_typing:
     description: |
       Event sent from client when they stop typing in a chat room.
 
       Here is an example of how to handle publishing the emit(stop typing) event in your client code in React:
 
       ```javascript
-      socket.emit("stop typing", room);
+      socketInstance.emit("stop typing", room);
       ```
     publish:
-      operationId: emit(stop_typing)
+      operationId: emit_stop_typing
       summary: Event sent from client when they stop typing in a chat room
       message:
         $ref: '#/components/messages/stop_typing'
 
-  client/emit(typing):
+  client/emit_typing:
     description: |
       Event sent from client when they are typing in a chat room.
 
       Here is an example of how to handle publishing the emit(typing) event in your client code in React:
 
       ```javascript
-      socket.emit("typing", room);
+      socketInstance.emit("typing", room);
       ```
     publish:
-      operationId: emit(typing)
+      operationId: emit_typing
       message:
         $ref: '#/components/messages/typing'
-
-  client/emit(new_message):
-    description: |
-      Event sent from a client when they send a new message to a chat room.
-
-      Here is an example of how to handle publishing the emit(new message) event in your client code in React:
-
-      ```javascript
-      socket.emit("new message", data);
-      ```
-    publish:
-      operationId: emit(new_message)
-      message:
-        $ref: '#/components/messages/new_message'
-
-  client/emit(new_chat):
-    description: |
-      Event sent from a client when they create a new chat room.
-
-      Here is an example of how to handle publishing the emit(new chat) event in your client code in React:
-
-      ```javascript
-      const chat = {
-        recipientId: data.users[0]._id,
-      };
-
-      socket.emit("new chat", chat);
-      ```
-    publish:
-      operationId: emit(new_chat)
-      message:
-        $ref: '#/components/messages/chat'
 
 components:
   messages:
@@ -203,6 +263,12 @@ components:
         type: object
         description: This event does not get sent with any data.
         additionalProperties: false
+
+    documentId:
+      payload:
+        type: string
+        examples:
+          - '66c3d3fe189638b81eac7cfd'
 
     typing:
       payload:
@@ -224,7 +290,7 @@ components:
         examples:
           - { '_id': '66c3d3fe189638b81eac7cfd' }
 
-    message_received:
+    message:
       payload:
         type: object
         description: Message object
@@ -249,6 +315,22 @@ components:
                       type: string
               isChannel:
                 type: boolean
+              lastMessage:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  chat:
+                    type: string
+                  sender:
+                    type: string
+                  content:
+                    type: string
+              chatAdmin:
+                type: string
+              updatedAt:
+                type: string
+            additionalProperties: false
           sender:
             type: object
             properties:
@@ -264,77 +346,29 @@ components:
               'chat':
                 {
                   '_id': '66c3d3fe189638b81eac7cfd',
-                  'chatName': 'Jane Doe',
+                  'chatName': 'Jane Doe and John Doe',
                   'users':
                     [
                       { '_id': '66c3d2fc189638b81eac7cf0', 'username': 'John Doe' },
                       { '_id': '66c3d383189638b81eac7cf7', 'username': 'Jane Doe' },
                     ],
                   'isChannel': false,
+                  'lastMessage':
+                    {
+                      '_id': '66c3d7cc3098b9dddd4c4ecf',
+                      'chat': '66c3d3fe189638b81eac7cfd',
+                      'sender': '66c3d2fc',
+                      'content': 'Hello, how are you?',
+                    },
+                  'chatAdmin': 'null',
+                  'updatedAt': '2021-06-07T20:00:00.000Z',
                 },
               'sender': { '_id': '66c3d2fc189638b81eac7cf0', 'username': 'John Doe' },
               'content': 'Hello, how are you?',
             }
         additionalProperties: false
 
-    new_message:
-      payload:
-        type: object
-        description: Message object
-        properties:
-          _id:
-            type: string
-          chat:
-            type: object
-            properties:
-              _id:
-                type: string
-              chatName:
-                type: string
-              users:
-                type: array
-                description: Array of user objects
-                items:
-                  type: object
-                  properties:
-                    _id:
-                      type: string
-                    username:
-                      type: string
-              isChannel:
-                type: boolean
-                default: false
-            additionalProperties: false
-          sender:
-            type: object
-            properties:
-              _id:
-                type: string
-              username:
-                type: string
-            additionalProperties: false
-          content:
-            type: string
-        examples:
-          - {
-              '_id': '66c3d7cc3098b9dddd4c4ecf',
-              'chat':
-                {
-                  '_id': '66c3d3fe189638b81eac7cfd',
-                  'chatName': 'Jane Doe',
-                  'users':
-                    [
-                      { '_id': '66c3d2fc189638b81eac7cf0', 'username': 'John Doe' },
-                      { '_id': '66c3d383189638b81eac7cf7', 'username': 'Jane Doe' },
-                    ],
-                  'isChannel': false,
-                },
-              'sender': { '_id': '66c3d2fc189638b81eac7cf0', 'username': 'John Doe' },
-              'content': 'Hello, how are you?',
-            }
-        additionalProperties: false
-
-    setup:
+    user:
       payload:
         type: object
         description: User object
@@ -343,13 +377,12 @@ components:
             type: string
           username:
             type: string
-          email:
-            type: string
-          role:
-            type: string
+        required:
+          - _id
+          - username
         examples:
-          - { '_id': '66c3d2fc189638b81eac7cf0', 'username': 'John Doe', 'email': 'john@email.com', 'role': 'user' }
-        additionalProperties: false
+          - { '_id': '66c3d2fc189638b81eac7cf0', 'username': 'John Doe' }
+        additionalProperties: true
 
     join_room:
       payload:
@@ -366,9 +399,54 @@ components:
       payload:
         type: object
         properties:
-          recipientId:
+          _id:
             type: string
-            description: ID of the user the chat was created with
+          chatName:
+            type: string
+          users:
+            type: array
+            items:
+              type: object
+              properties:
+                _id:
+                  type: string
+                username:
+                  type: string
+          isChannel:
+            type: boolean
+          lastMessage:
+            type: object
+            properties:
+              _id:
+                type: string
+              chat:
+                type: string
+              sender:
+                type: string
+              content:
+                type: string
+          chatAdmin:
+            type: string
+          updatedAt:
+            type: string
         examples:
-          - { 'recipientId': '66c3d3fe189638b81eac7cfd' }
+          - {
+              '_id': '66c3d3fe189638b81eac7cfd',
+              'chatName': 'Jane Doe and John Doe',
+              'users':
+                [
+                  { '_id': '66c3d2fc189638b81eac7cf0', 'username': 'John Doe' },
+                  { '_id': '66c3d383189638b81eac7cf7', 'username': 'Jane Doe' },
+                ],
+              'isChannel': false,
+              'lastMessage':
+                {
+                  '_id': '66c3d7cc3098b9dddd4c4ecf',
+                  'chat': '66c3d3fe189638b81eac7cfd',
+                  'sender': '66c3d2fc',
+                  'content': 'Hello, how are you?',
+                },
+              'chatAdmin': 'null',
+              'updatedAt': '2021-06-07T20:00:00.000Z',
+            }
         additionalProperties: false
