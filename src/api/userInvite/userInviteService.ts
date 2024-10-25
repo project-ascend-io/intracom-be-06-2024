@@ -6,6 +6,7 @@ import { ResponseStatus, ServiceResponse } from '@/common/models/serviceResponse
 import { logger } from '@/server';
 
 import { organizationRepository } from '../organization/organizationRepository';
+import { userRoles } from '../user/userModel';
 import { inviteState } from './userInviteModel';
 import { userInviteRepository } from './userInviteRepository';
 import { CreateUserInvite, UserInvite } from './userInviteSchema';
@@ -26,12 +27,18 @@ export const isValid = (expirationDate: string) => {
   return new Date(expirationDate) > new Date();
 };
 
-const setStateParams = (userInviteParams: any, userInvite: UserInvite) => {
-  if (userInviteParams.state == inviteState.Accepted && !isValid(userInvite.expires_in)) {
+export const setStateParams = (userInviteParams: any, userInvite: UserInvite, role: userRoles) => {
+  if (
+    (userInviteParams.state == inviteState.Accepted || userInviteParams.state == inviteState.Pending) &&
+    !isValid(userInvite.expires_in) &&
+    role == userRoles.User
+  ) {
     userInviteParams.state = inviteState.Expired;
   } else if (userInviteParams.state == inviteState.Denied) {
     userInviteParams.hash = '';
     userInviteParams.expires_in = '';
+  } else if (userInviteParams.state == inviteState.Accepted) {
+    userInviteParams.hash = '';
   } else if (userInviteParams.state == inviteState.Pending) {
     const newStr = randomBytes(10).toString('hex');
     userInviteParams.hash = generateHash(userInviteParams.email + newStr);
@@ -44,6 +51,7 @@ export const userInviteService = {
   getInvitesByOrgId: async (id: string, queryParams: any): Promise<ServiceResponse<UserInvite[] | null>> => {
     try {
       const userInvites = await userInviteRepository.findUserInvitesByOrdId(id, queryParams);
+
       if (userInvites.length == 0) {
         return new ServiceResponse(ResponseStatus.Success, 'User Invites not found', null, StatusCodes.OK);
       }
@@ -156,14 +164,35 @@ export const userInviteService = {
       if (!userInvite) {
         return new ServiceResponse(ResponseStatus.Failed, 'User Invite not found', null, StatusCodes.NOT_FOUND);
       }
-      if ('state' in userInviteParams) {
-        userInviteParams = setStateParams(userInviteParams, userInvite);
-      }
-      const savedUserInvite = await userInviteRepository.update(id, userInviteParams);
 
-      if ('state' in userInviteParams && userInviteParams.state == inviteState.Expired) {
-        return new ServiceResponse(ResponseStatus.Failed, 'User Invite expired', null, StatusCodes.BAD_REQUEST);
+      if ('state' in userInviteParams && userInvite.state == inviteState.Accepted) {
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          'User Invite is already accepted',
+          null,
+          StatusCodes.BAD_REQUEST
+        );
       }
+
+      if ('email' in userInviteParams) {
+        const existingUserInvite = await userInviteRepository.findByEmailAsync(userInviteParams.email);
+        if (existingUserInvite && existingUserInvite?._id.toString() !== id) {
+          return new ServiceResponse(
+            ResponseStatus.Failed,
+            'User Invite with this email already exists',
+            null,
+            StatusCodes.BAD_REQUEST
+          );
+        }
+      }
+
+      let updatedParams = userInviteParams;
+
+      if ('state' in userInviteParams) {
+        updatedParams = setStateParams(userInviteParams, userInvite, userRoles.Admin);
+      }
+
+      const savedUserInvite = await userInviteRepository.update(id, updatedParams);
 
       return new ServiceResponse<UserInvite | null>(
         ResponseStatus.Success,
@@ -185,14 +214,15 @@ export const userInviteService = {
       if (!userInvite) {
         return new ServiceResponse(ResponseStatus.Failed, 'User Invite not found', null, StatusCodes.NOT_FOUND);
       }
+      let updatedParams = userInviteParams;
       if ('state' in userInviteParams) {
-        userInviteParams = setStateParams(userInviteParams, userInvite);
+        updatedParams = setStateParams(userInviteParams, userInvite, userRoles.User);
       }
-      const savedUserInvite = await userInviteRepository.update(userInvite._id.toString(), userInviteParams);
 
-      if ('state' in userInviteParams && userInviteParams.state == inviteState.Expired) {
+      if ('state' in userInviteParams && updatedParams.state == inviteState.Expired) {
         return new ServiceResponse(ResponseStatus.Failed, 'User Invite expired', null, StatusCodes.BAD_REQUEST);
       }
+      const savedUserInvite = await userInviteRepository.update(userInvite._id.toString(), updatedParams);
 
       return new ServiceResponse<UserInvite | null>(
         ResponseStatus.Success,
