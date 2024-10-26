@@ -15,6 +15,7 @@ export const chatRepository = {
       let chats = await ChatModel.find({ users: { $elemMatch: { $eq: id } } })
         .populate('users', '-password')
         .populate('chatAdmin', '-password')
+        .populate('lastMessage')
         .sort({ updatedAt: -1 });
 
       chats = (await UserModel.populate(chats, {
