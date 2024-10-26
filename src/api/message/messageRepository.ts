@@ -1,5 +1,8 @@
+import mongoose from 'mongoose';
+
 import { MessageModel } from '@/api/message/messageModel';
 
+import { ChatModel } from '../chat/chatModel';
 import { mongoDatabase } from '../mongoDatabase';
 import { Message, NewMessage } from './messageSchema';
 
@@ -24,7 +27,11 @@ export const messageRepository = {
     try {
       await messageRepository.startConnection();
       const newMessage = new MessageModel(message);
-      await newMessage.save();
+      const savedMessage = await newMessage.save();
+
+      const chatId = new mongoose.Types.ObjectId(message.chat);
+      await ChatModel.findByIdAndUpdate(chatId, { lastMessage: savedMessage._id }, { new: true });
+
       const findMessage = await MessageModel.findById(newMessage._id)
         .populate('sender', 'username')
         .populate('chat', '_id');
