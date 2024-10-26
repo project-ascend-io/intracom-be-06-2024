@@ -79,7 +79,10 @@ export const initializeSocket = (server: any) => {
           /* eslint-disable no-case-declarations */
           switch (collectionName) {
             case 'chats':
-              const populatedChat = await ChatModel.populate(fullDocument, { path: 'users', select: '_id username' });
+              const populatedChat = await ChatModel.populate(fullDocument, [
+                { path: 'users', select: '_id username' },
+                { path: 'lastMessage' },
+              ]);
 
               if (populatedChat) {
                 const usersInChat: User[] = await UserModel.find({ _id: { $in: populatedChat.users } });
@@ -113,7 +116,18 @@ export const initializeSocket = (server: any) => {
           }
           /* eslint-enable no-case-declarations */
         } else if (change.operationType === 'delete') {
-          io.emit(`${collectionName} delete`, change.documentKey._id);
+          if (collectionName === 'chats') {
+            // This will remove all messages that belong to the chat that was deleted
+            await MessageModel.deleteMany({ chat: change.documentKey._id });
+            io.emit(`${collectionName} delete`, change.documentKey._id);
+          } else if (collectionName === 'messages') {
+            const doesChatStillExist = await ChatModel.findById(change.documentKey._id);
+            if (doesChatStillExist) {
+              io.emit('messages delete', change.documentKey._id);
+            }
+          } else {
+            io.emit(`${collectionName} delete`, change.documentKey._id);
+          }
         }
 
         logger.info(`${change.operationType.toLocaleUpperCase()} change detected in ${collectionName}`);
@@ -121,7 +135,7 @@ export const initializeSocket = (server: any) => {
     });
   };
 
-  // watchCollections();
+  watchCollections();
 
   return io;
 };
