@@ -11,9 +11,7 @@ export const mongoDatabase = {
     try {
       const { MONGODB_CONNECTION_STRING } = env;
       console.log('Mongo DB Connection String: ', MONGODB_CONNECTION_STRING);
-      const connection = await mongoose.connect(MONGODB_CONNECTION_STRING, {
-        readPreference: 'primary',
-      });
+      const connection = await mongoose.connect(MONGODB_CONNECTION_STRING);
       console.log('Connection Successful');
       return connection;
     } catch (err) {
