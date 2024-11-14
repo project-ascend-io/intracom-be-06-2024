@@ -29,7 +29,9 @@ const validUris = env.CORS_ORIGIN.split(',');
 // Middlewares
 app.use(cors({ origin: validUris, credentials: true }));
 app.use(helmet());
-app.use(rateLimiter);
+if (env.NODE_ENV == 'production') {
+  app.use(rateLimiter);
+}
 
 // Request logging
 app.use(requestLogger);
