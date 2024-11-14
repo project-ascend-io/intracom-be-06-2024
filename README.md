@@ -184,15 +184,15 @@ Developed to streamline backend development, this boilerplate is your solution f
      ```sh
       docker ps
      ```
-  - Connect to mongo1 container:
+   - Connect to mongo1 container:
     ```sh
       docker exec -it mongo1 mongosh -u root -p root
     ```
-  - Run replica set initiation command:
+   - Run replica set initiation command:
     ```sh
       rs.initiate({_id:'rs0',members:[{_id:0,host:'host.docker.internal:27017',priority:1},{_id:1,host:'host.docker.internal:27018',priority:0.5},{_id:2,host:'host.docker.internal:27019',priority:0.5}]})
     ```
-  - Verify Replica Set Configuration:
+   - Verify Replica Set Configuration:
     ```sh
       rs.status()
     ```
