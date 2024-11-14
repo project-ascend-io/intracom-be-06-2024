@@ -22,8 +22,12 @@ export const initializeSocket = (server: any) => {
   });
 
   instrument(io, {
-    auth: false,
-    mode: 'development',
+    auth: {
+      type: 'basic',
+      username: process.env.ADMIN_UI_USERNAME || '',
+      password: process.env.ADMIN_UI_PASSWORD || '',
+    },
+    mode: process.env.NODE_ENV as 'development' | 'production',
   });
 
   io.on('connection', (socket) => {
