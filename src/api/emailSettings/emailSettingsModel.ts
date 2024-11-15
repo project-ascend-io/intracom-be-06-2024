@@ -8,8 +8,9 @@ const mongooseEmailSettingsSchema = new Schema<EmailSettings>(
     port: { type: Number, required: true },
     username: { type: String, required: true },
     password: { type: String, required: true },
+    verified_sender_email: { type: String, required: true },
     securityType: { type: String, required: true },
-    organization: { type: String, required: true },
+    organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
   },
   {
     timestamps: true,
