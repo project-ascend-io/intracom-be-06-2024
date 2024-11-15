@@ -1,4 +1,6 @@
 import { StatusCodes } from 'http-status-codes';
+import mongoose from 'mongoose';
+import { describe, expect, it, vi } from 'vitest';
 
 import { EmailSettings } from '@/api/emailSettings/emailSettingsSchema';
 import { emailSettingsService } from '@/api/emailSettings/emailSettingsService';
@@ -11,7 +13,9 @@ describe('emailSettingsRouter', () => {
     port: 5432,
     username: 'root',
     password: 'securepassword',
+    verified_sender_email: 'john@example.com',
     securityType: 'TLS',
+    organization: new mongoose.mongo.ObjectId('66c3d2fc189638b81eac7cee'),
   };
 
   const mockEmailSettingsResponse: ServiceResponse<EmailSettings> = {

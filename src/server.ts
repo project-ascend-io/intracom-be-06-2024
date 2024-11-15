@@ -42,7 +42,9 @@ app.use(
     },
   })
 );
-app.use(rateLimiter);
+if (env.NODE_ENV == 'production') {
+  app.use(rateLimiter);
+}
 
 // Request logging
 app.use(requestLogger);

@@ -3,7 +3,7 @@
  */
 // eslint-disable-next-line no-undef
 module.exports = {
-  branches: ['master'],
+  branches: ['main'],
   plugins: [
     '@semantic-release/commit-analyzer', // Analyzes your commit messages and determines the type of version bump
     '@semantic-release/release-notes-generator', // Generates release notes based on commit messages
