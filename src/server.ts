@@ -1,10 +1,13 @@
 import cors from 'cors';
 import express, { Express } from 'express';
 import helmet from 'helmet';
+import path from 'path';
 import { pino } from 'pino';
 
 import { authRouter } from '@/api/auth/authRouter';
+import { chatRouter } from '@/api/chat/chatRouter';
 import { healthCheckRouter } from '@/api/healthCheck/healthCheckRouter';
+import { messageRouter } from '@/api/message/messageRouter';
 import { organizationRouter } from '@/api/organization/organizationRouter';
 import { userRouter } from '@/api/user/userRouter';
 import { userInviteRouter } from '@/api/userInvite/userInviteRouter';
@@ -18,6 +21,7 @@ import { sessionConfiguration } from '@/common/utils/sessionConfig';
 
 const logger = pino({ name: 'server start' });
 const app: Express = express();
+const socketDocsPath = path.join(__dirname, './socket-docs');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -28,7 +32,16 @@ app.set('trust proxy', true);
 const validUris = env.CORS_ORIGIN.split(',');
 // Middlewares
 app.use(cors({ origin: validUris, credentials: true }));
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      },
+    },
+  })
+);
 if (env.NODE_ENV == 'production') {
   app.use(rateLimiter);
 }
@@ -49,6 +62,11 @@ app.use('/organizations', organizationRouter);
 app.use('/users', userRouter);
 app.use('/user-invites', userInviteRouter);
 app.use('/organizations', userInviteRouter);
+app.use('/messages', messageRouter);
+app.use('/chats', chatRouter);
+
+// Socket.IO Documentation
+app.use('/socket-docs', express.static(socketDocsPath));
 
 // Swagger UI
 app.use('/api-docs', openAPIRouter);

@@ -1,8 +1,10 @@
 import { OpenApiGeneratorV3, OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 
 import { authRegistry } from '@/api/auth/authRouter';
+import { chatRegistry } from '@/api/chat/chatRouter';
 import { emailSettingsRegistry } from '@/api/emailSettings/emailSettingsRouter';
 import { healthCheckRegistry } from '@/api/healthCheck/healthCheckRouter';
+import { messageRegistry } from '@/api/message/messageRouter';
 import { organizationRegistry } from '@/api/organization/organizationRouter';
 import { userRegistry } from '@/api/user/userRouter';
 import { userInviteRegistry } from '@/api/userInvite/userInviteRouter';
@@ -14,6 +16,8 @@ export function generateOpenAPIDocument() {
     userRegistry,
     organizationRegistry,
     emailSettingsRegistry,
+    chatRegistry,
+    messageRegistry,
     userInviteRegistry,
   ]);
 
