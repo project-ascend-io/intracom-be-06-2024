@@ -1,0 +1,59 @@
+services:
+  mongo1:
+    build: .
+    container_name: mongo1
+    restart: always
+    ports:
+      - '27017:27017'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    volumes:
+      - ./mongo1:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    command:
+      ['mongod', '--replSet', 'rs0', '--keyFile', '/etc/mongodb-keyfile', '--auth', '--bind_ip_all', '--port', '27017']
+    networks:
+      mongo_net:
+
+  mongo2:
+    build: .
+    container_name: mongo2
+    restart: always
+    ports:
+      - '27018:27018'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    volumes:
+      - ./mongo2:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    command:
+      ['mongod', '--replSet', 'rs0', '--keyFile', '/etc/mongodb-keyfile', '--auth', '--bind_ip_all', '--port', '27018']
+    networks:
+      mongo_net:
+
+  mongo3:
+    build: .
+    container_name: mongo3
+    restart: always
+    ports:
+      - '27019:27019'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    volumes:
+      - ./mongo3:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    command:
+      ['mongod', '--replSet', 'rs0', '--keyFile', '/etc/mongodb-keyfile', '--auth', '--bind_ip_all', '--port', '27019']
+    networks:
+      mongo_net:
+
+networks:
+  mongo_net:
+    name: mongo_net
+    driver: bridge

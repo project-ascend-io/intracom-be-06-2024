@@ -138,7 +138,7 @@ Developed to streamline backend development, this boilerplate is your solution f
 
 4. **Setup Environment Variables:**
 
-   - Create a `.env` file in the root directory of your project with the following content:
+   - Create a `.env` file in the root directory of your project with the following content that matches the .env.template:
 
      ```
      NODE_ENV=development
@@ -161,28 +161,42 @@ Developed to streamline backend development, this boilerplate is your solution f
      MONGODB_CONNECTION_STRING=mongodb://root:root@localhost:27017/
      ```
 
-5. **Install Docker Desktop:**
+5. **Install and Run Docker Desktop:**
 
    - Download and install Docker Desktop from [Docker's official website](https://www.docker.com/products/docker-desktop).
+   - Make sure your Docker Desktop is running.
 
-6. **Download MongoDB Image:**
+6. **Run Docker Compose:**
 
-   - Pull the MongoDB community server image from Docker Hub:
+   - Change directories to the database directory:
      ```sh
-     docker pull mongo:latest
+     cd database
      ```
 
-7. **Configure and Run MongoDB Container:**
+   - Run the docker-compose command:
+     ```sh
+      docker-compose up -d --build
+     ```
 
-   - Open Docker Desktop and create a new container with the following settings:
-     - **Container Name**: `intracom-database`
-     - **Port**: `27017`
-     - **Volumes**: `/path/to/intracom-be-06-2024/database -> /data`
-     - **Environment Variables**:
-       - `MONGO_INITDB_DATABASE`: `intracom_database`
-       - `MONGO_INITDB_ROOT_USERNAME`: `root`
-       - `MONGO_INITDB_ROOT_PASSWORD`: `root`
-     - Click `Run`.
+7. **Setup MongoDB Replica Set:**
+
+   - Check to make sure your Docker containers are running:
+     ```sh
+      docker ps
+     ```
+   - Connect to mongo1 container:
+    ```sh
+      docker exec -it mongo1 mongosh -u root -p root
+    ```
+   - Run replica set initiation command:
+    ```sh
+      rs.initiate({_id:'rs0',members:[{_id:0,host:'host.docker.internal:27017',priority:1},{_id:1,host:'host.docker.internal:27018',priority:0.5},{_id:2,host:'host.docker.internal:27019',priority:0.5}]})
+    ```
+   - Verify Replica Set Configuration:
+    ```sh
+      rs.status()
+    ```
+    - You should see an output with information from the initiate command you used to set up the replica set.
 
 8. **Run the Application:**
 
@@ -197,5 +211,3 @@ Developed to streamline backend development, this boilerplate is your solution f
 ---
 
 For further details or troubleshooting, please refer to the respective documentation of each tool used.
-
----
