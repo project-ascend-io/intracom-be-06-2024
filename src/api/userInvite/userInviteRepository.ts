@@ -1,4 +1,6 @@
 import { mongoDatabase } from '../mongoDatabase';
+import { UserModel } from '../user/userModel';
+import { User } from '../user/userSchema';
 import { UserInviteModel } from './userInviteModel';
 import { CreateUserInvite, UserInvite } from './userInviteSchema';
 
@@ -16,10 +18,20 @@ export const userInviteRepository = {
       }
       if (queryParams.state) {
         query.state = queryParams.state;
-        console.log('QUeryPARAMS REPO', queryParams);
       }
 
-      return await UserInviteModel.find(query);
+      const invites = await UserInviteModel.find(query);
+      const invitesWithUsers = await Promise.all(
+        invites.map(async (invite: UserInvite) => {
+          const user: User | null = await UserModel.findOne({ email: invite.email });
+
+          return {
+            invite,
+            user,
+          };
+        })
+      );
+      return invitesWithUsers;
     } catch (err) {
       console.error('[Error] userInviteRepository - findUserInvitesByOrgIdAsync: ', err);
       throw err;

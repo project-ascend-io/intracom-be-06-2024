@@ -3,10 +3,11 @@ import mongoose from 'mongoose';
 import { describe, expect, it, Mock, vi } from 'vitest';
 
 import { organizationRepository } from '@/api/organization/organizationRepository';
+import { userRoles } from '@/api/user/userModel';
 import { inviteState } from '@/api/userInvite/userInviteModel';
 import { userInviteRepository } from '@/api/userInvite/userInviteRepository';
 import { UserInvite } from '@/api/userInvite/userInviteSchema';
-import { userInviteService } from '@/api/userInvite/userInviteService';
+import { setStateParams, userInviteService } from '@/api/userInvite/userInviteService';
 
 vi.mock('@/api/userInvite/userInviteRepository');
 vi.mock('@/api/organization/organizationRepository');
@@ -229,39 +230,52 @@ describe('userInviteService', () => {
   });
 
   describe('updateById', () => {
-    it('updates invite status', async () => {
-      const orgId = mockUserInvites[0].organization._id;
+    it('updates invite status to Expired as User', async () => {
+      const userInvite = mockUserInvites[0]; //user invite with expired date and pending state
+      const params = { state: inviteState.Accepted };
+      const updatedParams = setStateParams(params, userInvite, userRoles.User);
 
-      const id = mockUserInvites[0]._id;
-      const mockUserInvite = mockUserInvites.find((userInvite) => userInvite._id === id);
-
-      if (mockUserInvite) {
-        //setting expiration date to a future date
-        mockUserInvite.expires_in = new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000).toISOString();
-        mockUserInvite.state = inviteState.Accepted;
-      }
-
-      (organizationRepository.findByIdAsync as Mock).mockReturnValue(mockUserInvites[0].organization);
-      (userInviteRepository.findByIdAsync as Mock).mockReturnValue(mockUserInvite);
-      (userInviteRepository.update as Mock).mockReturnValue(mockUserInvite);
-
-      const params = {
-        state: inviteState.Accepted,
-      };
-
-      // Act
-      const result = await userInviteService.updateById(id, orgId, params);
-
-      // // Assert
-      expect(result.statusCode).toEqual(StatusCodes.OK);
-      expect(result.success).toBeTruthy();
-      expect(result.message).toContain('User invite updated.');
-      expect(result.responseObject).toHaveProperty('state');
-      expect(result.responseObject.state).toBe('Accepted');
-
-      //setting expiration date baak to normal
-      mockUserInvite.expires_in = '2024-08-09T01:16:20.091Z';
+      expect(updatedParams).toHaveProperty('state');
+      expect(updatedParams.state).toBe('Expired');
     });
+
+    it('updates user invite state to Denied as Admin/User', async () => {
+      const userInvite = mockUserInvites[0];
+      const params = { state: inviteState.Denied };
+      const updatedParams = setStateParams(params, userInvite, userRoles.User);
+
+      expect(updatedParams).toHaveProperty('state');
+      expect(updatedParams).toHaveProperty('expires_in');
+      expect(updatedParams).toHaveProperty('hash');
+      expect(updatedParams.state).toBe('Denied');
+    });
+
+    it('updates user invite state to Accepted as Admin', async () => {
+      const userInvite = mockUserInvites[0];
+      const params = { state: inviteState.Accepted };
+      const updatedParams = setStateParams(params, userInvite, userRoles.Admin);
+
+      expect(updatedParams).toHaveProperty('state');
+      expect(updatedParams.state).toBe('Accepted');
+      expect(updatedParams).toHaveProperty('hash');
+      expect(updatedParams.hash).toBe('');
+    });
+
+    it('updates user invite state to Pending as Admin', async () => {
+      const userInvite = mockUserInvites[1];
+      const params = { state: inviteState.Pending };
+      const updatedParams = setStateParams(params, userInvite, userRoles.Admin);
+
+      expect(updatedParams).toHaveProperty('state');
+      expect(updatedParams).toHaveProperty('hash');
+      expect(updatedParams.hash).toBeTypeOf('string');
+      expect(updatedParams.hash).not.toBe('');
+      expect(updatedParams.state).toBe('Pending');
+      expect(updatedParams).toHaveProperty('expires_in');
+      expect(updatedParams.expires_in).toBeTypeOf('string');
+      expect(updatedParams.expires_in).not.toBe('');
+    });
+
     it('returns error if organization not found', async () => {
       const orgId = new mongoose.mongo.ObjectId();
       const mockOrg = mockUserInvites.find((userInvite) => userInvite.organization._id === orgId);
@@ -281,6 +295,32 @@ describe('userInviteService', () => {
       expect(result.statusCode).toEqual(StatusCodes.NOT_FOUND);
       expect(result.success).toBeFalsy();
       expect(result.message).toContain('Organization not found');
+      expect(result.responseObject).toBe(null);
+    });
+
+    it('returns error if user invite with an email already exists', async () => {
+      const userInviteToUpdate = mockUserInvites[0];
+      const mockOrg = userInviteToUpdate.organization;
+      const existingEmail = mockUserInvites[1].email;
+
+      const params = {
+        email: existingEmail,
+      };
+
+      (organizationRepository.findByIdAsync as Mock).mockReturnValue(mockOrg);
+      (userInviteRepository.findByIdAsync as Mock).mockReturnValue(mockUserInvites[0]);
+      (userInviteRepository.findByEmailAsync as Mock).mockReturnValue(mockUserInvites[1]);
+
+      const result = await userInviteService.updateById(
+        userInviteToUpdate._id.toString(),
+        mockOrg._id.toString(),
+        params
+      );
+
+      // // Assert
+      expect(result.statusCode).toEqual(StatusCodes.BAD_REQUEST);
+      expect(result.success).toBeFalsy();
+      expect(result.message).toContain('User Invite with this email already exists');
       expect(result.responseObject).toBe(null);
     });
     it('returns error if user invite not found', async () => {
@@ -306,13 +346,14 @@ describe('userInviteService', () => {
       expect(result.message).toContain('User Invite not found');
       expect(result.responseObject).toBe(null);
     });
-    it('returns error if user invite expired', async () => {
-      const orgId = mockUserInvites[0].organization._id;
+    it('returns error if user invite is already accepted', async () => {
+      const orgId = mockUserInvites[1].organization._id;
 
-      const id = mockUserInvites[0]._id;
+      const id = mockUserInvites[1]._id;
       const mockUserInvite = mockUserInvites.find((userInvite) => userInvite._id === id);
+      mockUserInvite.state = inviteState.Accepted;
 
-      (organizationRepository.findByIdAsync as Mock).mockReturnValue(mockUserInvites[0].organization);
+      (organizationRepository.findByIdAsync as Mock).mockReturnValue(mockUserInvites[1].organization);
       (userInviteRepository.findByIdAsync as Mock).mockReturnValue(mockUserInvite);
 
       const params = {
@@ -325,7 +366,7 @@ describe('userInviteService', () => {
       // // Assert
       expect(result.statusCode).toEqual(StatusCodes.BAD_REQUEST);
       expect(result.success).toBeFalsy();
-      expect(result.message).toContain('User Invite expired');
+      expect(result.message).toContain('User Invite is already accepted');
       expect(result.responseObject).toBe(null);
     });
   });
