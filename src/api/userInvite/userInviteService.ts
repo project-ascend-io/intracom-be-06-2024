@@ -121,7 +121,7 @@ export const userInviteService = {
         if (existingUserInvite) {
           return new ServiceResponse(
             ResponseStatus.Failed,
-            'User Invite already exists',
+            `User Invite already exists: ${email}`,
             null,
             StatusCodes.UNPROCESSABLE_ENTITY
           );
