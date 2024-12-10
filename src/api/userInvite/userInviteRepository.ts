@@ -14,10 +14,10 @@ export const userInviteRepository = {
       await userInviteRepository.startConnection();
       const query: any = { organization: id };
       if (queryParams.email) {
-        query.email = queryParams.email;
+        query.email = { $eq: queryParams.email };
       }
       if (queryParams.state) {
-        query.state = queryParams.state;
+        query.state = { $eq: queryParams.state };
       }
 
       const invites = await UserInviteModel.find(query);
