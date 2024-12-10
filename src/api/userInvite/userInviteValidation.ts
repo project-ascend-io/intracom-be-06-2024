@@ -38,7 +38,8 @@ export const UpdateUserInviteByIdSchema = z.object({
     orgId: commonValidations.id.optional(),
   }),
   body: z.object({
-    state: commonValidations.state,
+    state: commonValidations.state.optional(),
+    email: commonValidations.email.optional(),
   }),
 });
 
