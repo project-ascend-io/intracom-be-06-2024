@@ -230,30 +230,7 @@ describe('userInviteService', () => {
   });
 
   describe('updateById', () => {
-    //testing setStateParams() which is responsible for setting the state params that will be passed to repository
-    //this method is also used for updateByhash() service method
-
     it('updates invite status to Expired as User', async () => {
-      // const setStateParams = (userInviteParams: any, userInvite: UserInvite, role: userRoles) => {
-      //   if (
-      //     (userInviteParams.state == inviteState.Accepted || userInviteParams.state == inviteState.Pending) &&
-      //     !isValid(userInvite.expires_in) &&
-      //     role == userRoles.User
-      //   ) {
-      //     userInviteParams.state = inviteState.Expired;
-      //   } else if (userInviteParams.state == inviteState.Denied) {
-      //     userInviteParams.hash = '';
-      //     userInviteParams.expires_in = '';
-      //   } else if (userInviteParams.state == inviteState.Accepted) {
-      //     userInviteParams.hash = '';
-      //   } else if (userInviteParams.state == inviteState.Pending) {
-      //     const newStr = randomBytes(10).toString('hex');
-      //     userInviteParams.hash = generateHash(userInviteParams.email + newStr);
-      //     userInviteParams.expires_in = generateExpDate();
-      //   }
-      //   return userInviteParams;
-      // };
-
       const userInvite = mockUserInvites[0]; //user invite with expired date and pending state
       const params = { state: inviteState.Accepted };
       const updatedParams = setStateParams(params, userInvite, userRoles.User);
